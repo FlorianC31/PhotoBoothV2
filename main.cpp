@@ -1,11 +1,10 @@
-#include "mainwindow.h"
+#include "photobooth.h"
 
 #include <QApplication>
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    MainWindow w;
-    w.show();
+    PhotoBooth photobooth;
     return a.exec();
 }

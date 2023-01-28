@@ -9,12 +9,22 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    lib/Relay/relay.cpp \
+    lib/camera.cpp \
+    lib/photo.cpp \
+    lib/printer.cpp \
+    lib/relay.cpp \
+    lib/utils.cpp \
+    lib/videoflow.cpp \
     main.cpp \
     photobooth.cpp
 
 HEADERS += \
-    lib/Relay/relay.h \
+    lib/camera.h \
+    lib/photo.h \
+    lib/printer.h \
+    lib/relay.h \
+    lib/utils.h \
+    lib/videoflow.h \
     photobooth.h
 
 FORMS += \
@@ -32,4 +42,5 @@ INCLUDEPATH += $$PWD/lib/ftd2xx
 DEPENDPATH += $$PWD/lib/ftd2xx
 
 DISTFILES += \
-    readme.MD
+    readme.MD \
+    settings.ini

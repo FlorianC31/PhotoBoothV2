@@ -5,6 +5,7 @@
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    PhotoBooth photobooth;
+    PhotoBooth photoBooth;
+    photoBooth.show();
     return a.exec();
 }

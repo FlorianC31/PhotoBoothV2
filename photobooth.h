@@ -39,12 +39,14 @@ private:
     Photo m_photo;
     Printer m_printer;
 
+    QString m_settingFile;
     uint m_printCounter;
     State m_state;
     uint m_nbPrint;
     uint m_nbPrintMax;
     uint m_isoMax;
-    QSettings* m_settings;
+    bool m_upsideDown;
+    bool m_modeDev;
 
     QString m_font;
     double m_fontSizeRatio;
@@ -56,6 +58,8 @@ private:
 
     void showCam();
     void showPhoto();
+    void goToSleep();
+    void exit();
 
     void updateNbPrint(int increment);
     void btnActivate(QPushButton* button);

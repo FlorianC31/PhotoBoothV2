@@ -8,7 +8,7 @@
  */
 bool transformColor(QString colorCode, QMap<char, uint>& colorRGB)
 {
-    QString errorMsg("The color code in settings.ini is incorrect");
+    QString errorMsg("The color code in settings file is incorrect");
 
     if (colorCode.size() != 7)
     {

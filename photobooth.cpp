@@ -5,6 +5,7 @@
 PhotoBooth::PhotoBooth(QWidget *parent)
     : QWidget(parent),
     ui(new Ui::PhotoBooth),
+    m_videoFlow(nullptr),
     m_settingFile("settings.ini")
 {
     ui->setupUi(this);
@@ -22,6 +23,8 @@ PhotoBooth::PhotoBooth(QWidget *parent)
         this->close();
 
     settingDisplay();
+
+    m_videoFlow = new VideoFlow(this, m_camId);
 
     //showCam();
     showPhoto();
@@ -61,6 +64,7 @@ bool PhotoBooth::readingSettingsFile()
 
     // read camera section
     settings.beginReadArray("camera");
+    m_camId = settings.value("camId").toInt();
     m_upsideDown = settings.value("upsideDown").toBool();
     settings.endArray();
 
@@ -93,7 +97,7 @@ void PhotoBooth::showCam()
     ui->veilleButton->hide();
     ui->widgetPrint->hide();
 
-    m_videoFlow.start();
+    m_videoFlow->start();
     ui->widgetPhoto->show();
 
     m_state = SHOWING_CAM;

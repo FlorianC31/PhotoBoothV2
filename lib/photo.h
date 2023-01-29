@@ -1,3 +1,4 @@
+#pragma once
 #ifndef PHOTO_H
 #define PHOTO_H
 

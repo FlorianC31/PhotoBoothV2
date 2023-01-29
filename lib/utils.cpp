@@ -16,16 +16,16 @@ bool transformColor(QString colorCode, QMap<char, uint>& colorRGB)
         return false;
     }
 
-    if (colorCode[0] != "#")
+    if (colorCode[0] != QChar('#'))
     {
         qDebug() << errorMsg;
         return false;
     }
 
     bool okR, okG, okB;
-    colorRGB['R'] = colorCode.midRef(1,2).toUInt(&okR, 16);
-    colorRGB['G'] = colorCode.midRef(3,2).toUInt(&okG, 16);
-    colorRGB['B'] = colorCode.midRef(5,2).toUInt(&okB, 16);
+    colorRGB['R'] = QStringView(colorCode).mid(1,2).toUInt(&okR, 16);
+    colorRGB['G'] = QStringView(colorCode).mid(3,2).toUInt(&okG, 16);
+    colorRGB['B'] = QStringView(colorCode).mid(5,2).toUInt(&okB, 16);
 
 
     if (!okR || !okG ||! okB)

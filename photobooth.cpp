@@ -54,7 +54,7 @@ bool PhotoBooth::readingSettingsFile()
 
     // read relay section
     settings.beginReadArray("relay");
-    for (const QString &system : {"pcFan", "printerFan", "light"}){
+    for (const QString &system : QStringList({"pcFan", "printerFan", "light"})){
         m_relaysConfig[system] = settings.value(system).toUInt();
     }
     settings.endArray();

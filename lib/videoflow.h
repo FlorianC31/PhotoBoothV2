@@ -1,6 +1,7 @@
 #ifndef VIDEOFLOW_H
 #define VIDEOFLOW_H
 
+#include <opencv2/core.hpp>
 
 class VideoFlow
 {

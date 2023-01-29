@@ -44,3 +44,10 @@ DEPENDPATH += $$PWD/lib/ftd2xx
 DISTFILES += \
     readme.MD \
     settings.ini
+
+#win32:CONFIG(release, debug|release): LIBS += -L$$PWD/lib/opencv/x64/vc16/lib/ -lopencv_world470
+#else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/lib/opencv/x64/vc16/lib/ -lopencv_world470d
+LIBS += -L$$PWD/lib/opencv/x64/vc16/lib/ -lopencv_world470
+
+INCLUDEPATH += $$PWD/lib/opencv/include
+DEPENDPATH += $$PWD/lib/opencv/include

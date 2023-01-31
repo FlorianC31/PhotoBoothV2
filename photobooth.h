@@ -39,7 +39,7 @@ private:
         SLEEPING,
         SHOWING_CAM,
         DISPLAY_PIC,
-        COUNTING_DOW
+        COUNTING_DOWN
     };
 
     QString m_settingFile;

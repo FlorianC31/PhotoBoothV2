@@ -35,7 +35,7 @@ qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
-
+# ftd2xx lib
 win32: LIBS += -L$$PWD/lib/ftd2xx/ -lftd2xx
 
 INCLUDEPATH += $$PWD/lib/ftd2xx
@@ -45,9 +45,11 @@ DISTFILES += \
     readme.MD \
     settings.ini
 
-#win32:CONFIG(release, debug|release): LIBS += -L$$PWD/lib/opencv/x64/vc16/lib/ -lopencv_world470
-#else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/lib/opencv/x64/vc16/lib/ -lopencv_world470d
-LIBS += -L$$PWD/lib/opencv/x64/vc16/lib/ -lopencv_world470
+# Opencv lib
+LIBS += -L$$PWD/lib/opencv/x64/mingw/lib/ -llibopencv_core470.dll
+LIBS += -L$$PWD/lib/opencv/x64/mingw/lib/ -llibopencv_imgcodecs470.dll
+LIBS += -L$$PWD/lib/opencv/x64/mingw/lib/ -llibopencv_imgproc470.dll
+LIBS += -L$$PWD/lib/opencv/x64/mingw/lib/ -llibopencv_videoio470.dll
 
 INCLUDEPATH += $$PWD/lib/opencv/include
 DEPENDPATH += $$PWD/lib/opencv/include

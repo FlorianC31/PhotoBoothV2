@@ -6,7 +6,11 @@ PhotoBooth::PhotoBooth(QWidget *parent)
     : QWidget(parent),
     ui(new Ui::PhotoBooth),
     m_videoFlow(nullptr),
-    m_settingFile("settings.ini")
+    m_settingFile("settings.ini"),
+    m_relay(nullptr),
+    m_pcFan(nullptr),
+    m_printerFan(nullptr),
+    m_light(nullptr)
 {
     ui->setupUi(this);
 
@@ -23,6 +27,7 @@ PhotoBooth::PhotoBooth(QWidget *parent)
         this->close();
 
     settingDisplay();
+    settingRelayDevices();
 
     m_videoFlow = new VideoFlow(this, m_camId);
 
@@ -32,6 +37,11 @@ PhotoBooth::PhotoBooth(QWidget *parent)
 
 PhotoBooth::~PhotoBooth()
 {
+    delete m_videoFlow;
+    delete m_relay;
+    delete m_pcFan;
+    delete m_printerFan;
+    delete m_light;
     delete ui;
 }
 
@@ -57,6 +67,7 @@ bool PhotoBooth::readingSettingsFile()
 
     // read relay section
     settings.beginReadArray("relay");
+    m_relayDevice = settings.value("deviceNumber").toUInt();
     for (const QString &system : QStringList({"pcFan", "printerFan", "light"})){
         m_relaysConfig[system] = settings.value(system).toUInt();
     }
@@ -195,4 +206,12 @@ void PhotoBooth::print()
 void PhotoBooth::takePhoto()
 {
     showPhoto();
+}
+
+void PhotoBooth::settingRelayDevices()
+{
+    m_relay = new Relay(m_relayDevice);
+    m_pcFan = new RelayDevice(m_relay, m_relaysConfig["pcFan"]);
+    m_printerFan = new RelayDevice(m_relay, m_relaysConfig["printerFan"]);
+    m_light = new RelayDevice(m_relay, m_relaysConfig["light"]);
 }

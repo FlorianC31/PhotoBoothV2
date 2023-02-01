@@ -31,7 +31,6 @@ private:
     Ui::PhotoBooth *ui;
     Camera m_camera;
     VideoFlow* m_videoFlow;
-    Relay m_relay;
     Photo m_photo;
     Printer m_printer;
 
@@ -51,6 +50,7 @@ private:
     int m_camId;
     bool m_upsideDown;
     bool m_modeDev;
+    uint m_relayDevice;
 
     QString m_font;
     double m_fontSizeRatio;
@@ -59,6 +59,7 @@ private:
 
     bool readingSettingsFile();
     void settingDisplay();
+    void settingRelayDevices();
 
     void showCam();
     void showPhoto();
@@ -71,6 +72,10 @@ private:
     void print();
     void takePhoto();
 
+    Relay* m_relay;
+    RelayDevice* m_pcFan;
+    RelayDevice* m_printerFan;
+    RelayDevice* m_light;
 
 };
 

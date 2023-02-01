@@ -5,7 +5,10 @@
 PhotoBooth::PhotoBooth(QWidget *parent)
     : QWidget(parent),
     ui(new Ui::PhotoBooth),
-    m_videoFlow(nullptr),
+    m_camera(nullptr),
+    m_camTrigger(nullptr),
+    m_photo(nullptr),
+    m_printer(nullptr),
     m_settingFile("settings.ini"),
     m_relay(nullptr),
     m_pcFan(nullptr),
@@ -29,15 +32,15 @@ PhotoBooth::PhotoBooth(QWidget *parent)
     settingDisplay();
     settingRelayDevices();
 
-    m_videoFlow = new VideoFlow(this, m_camId);
+    m_camera = new Camera(this, m_cameraDevice, m_fps);
 
-    //showCam();
-    showPhoto();
+    showCam();
+    //showPhoto();
 }
 
 PhotoBooth::~PhotoBooth()
 {
-    delete m_videoFlow;
+    delete m_camera;
     delete m_relay;
     delete m_pcFan;
     delete m_printerFan;
@@ -57,12 +60,13 @@ bool PhotoBooth::readingSettingsFile()
         return false;
     }
     qDebug() << "Reading file " << QDir::currentPath() + "/" + m_settingFile;
+    QSettings settings(m_settingFile, QSettings::IniFormat);
 
     // Read printer section
-    QSettings settings(m_settingFile, QSettings::IniFormat);
     settings.beginReadArray("printer");
     m_printCounter = settings.value("counter").toUInt();
     m_nbPrintMax = settings.value("nbPrintMax").toUInt();
+    m_addWatermark = settings.value("addWatermark").toBool();
     settings.endArray();
 
     // read relay section
@@ -75,8 +79,10 @@ bool PhotoBooth::readingSettingsFile()
 
     // read camera section
     settings.beginReadArray("camera");
-    m_camId = settings.value("camId").toInt();
     m_upsideDown = settings.value("upsideDown").toBool();
+    m_cameraDevice = settings.value("deviceNumber").toUInt();
+    m_mirror = settings.value("mirror").toBool();
+    m_fps = settings.value("fps").toUInt();
     settings.endArray();
 
     // read dev section
@@ -108,7 +114,7 @@ void PhotoBooth::showCam()
     ui->veilleButton->hide();
     ui->widgetPrint->hide();
 
-    m_videoFlow->start();
+    m_camera->start();
     ui->widgetPhoto->show();
 
     m_state = SHOWING_CAM;
@@ -186,7 +192,7 @@ void PhotoBooth::print()
         return;
 
     // send photo to printer
-    m_printer.print(m_nbPrint);
+    m_printer->print(m_nbPrint);
 
     // update print counter
     m_printCounter -= m_nbPrint;

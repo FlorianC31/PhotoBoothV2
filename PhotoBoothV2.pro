@@ -10,21 +10,21 @@ CONFIG += c++17
 
 SOURCES += \
     lib/camera.cpp \
+    lib/camtrigger.cpp \
     lib/photo.cpp \
     lib/printer.cpp \
     lib/relay.cpp \
     lib/utils.cpp \
-    lib/videoflow.cpp \
     main.cpp \
     photobooth.cpp
 
 HEADERS += \
     lib/camera.h \
+    lib/camtrigger.h \
     lib/photo.h \
     lib/printer.h \
     lib/relay.h \
     lib/utils.h \
-    lib/videoflow.h \
     photobooth.h
 
 FORMS += \

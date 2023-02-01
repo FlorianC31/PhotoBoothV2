@@ -7,9 +7,9 @@
 #include <QPushButton>
 
 #include "lib/camera.h"
-#include "lib/videoflow.h"
-#include "lib/relay.h"
+#include "lib/camtrigger.h"
 #include "lib/photo.h"
+#include "lib/relay.h"
 #include "lib/printer.h"
 
 
@@ -17,7 +17,7 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class PhotoBooth; }
 QT_END_NAMESPACE
 
-class VideoFlow;
+class Camera;
 
 class PhotoBooth : public QWidget
 {
@@ -28,11 +28,11 @@ public:
     ~PhotoBooth();
 
 private:
-    Ui::PhotoBooth *ui;
-    Camera m_camera;
-    VideoFlow* m_videoFlow;
-    Photo m_photo;
-    Printer m_printer;
+    Ui::PhotoBooth* ui;
+    Camera* m_camera;
+    CamTrigger* m_camTrigger;
+    Photo* m_photo;
+    Printer* m_printer;
 
     enum State{
         SLEEPING,
@@ -47,10 +47,13 @@ private:
     uint m_nbPrint;
     uint m_nbPrintMax;
     uint m_isoMax;
-    int m_camId;
     bool m_upsideDown;
+    bool m_mirror;
+    bool m_addWatermark;
     bool m_modeDev;
+    uint m_fps;
     uint m_relayDevice;
+    uint m_cameraDevice;
 
     QString m_font;
     double m_fontSizeRatio;

@@ -14,6 +14,11 @@ Relay::Relay(unsigned int deviceNumber) :
 {
 }
 
+Relay::~Relay()
+{
+
+}
+
 bool Relay::connect()
 {
     FT_STATUS ftStatus;
@@ -64,6 +69,11 @@ RelayDevice::RelayDevice(Relay* relay, unsigned int port) :
     // 3 -> 0100 -> 4
     // 4 -> 1000 -> 8
     m_slotId = std::pow(2, port);
+}
+
+RelayDevice::~RelayDevice()
+{
+
 }
 
 void RelayDevice::on() {m_relay->set(m_slotId, true);}

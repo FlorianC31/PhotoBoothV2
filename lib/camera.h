@@ -7,32 +7,34 @@
 #include <opencv2/imgproc.hpp>
 
 #include <QtCore>
-#include <QObject>
+#include <QLabel>
 
 #include <photobooth.h>
 
 class PhotoBooth;
 
-class Camera
+class Camera : public QObject
 {
+    Q_OBJECT
+
 public:
-    Camera(PhotoBooth* photoBooth, uint camId, uint fps);
+    Camera(QLabel* camView, uint camId, uint fps);
     ~Camera();
 
-    void loop();
     void start();
     void stop();
 
 private:
     bool m_isRunning;
-    PhotoBooth* m_photoBooth;
+    QLabel* m_camView;
     uint m_camId;
     uint m_fps;
     cv::VideoCapture m_cap;
     QTimer* m_timer;
 
-    cv::Mat frame;
-    QImage qt_image;
+private slots:
+    void loop();
+
 };
 
 #endif // CAMERA_H

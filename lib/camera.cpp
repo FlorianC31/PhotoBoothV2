@@ -1,10 +1,9 @@
 #include "Camera.h"
 #include <QDebug>
-#include <QObject>
 
-Camera::Camera(PhotoBooth* photoBooth, uint camId, uint fps) :
+Camera::Camera(QLabel* camView, uint camId, uint fps) :
     m_isRunning(false),
-    m_photoBooth(photoBooth),
+    m_camView(camView),
     m_camId(camId),
     m_fps(fps),
     m_timer(nullptr)
@@ -14,18 +13,31 @@ Camera::Camera(PhotoBooth* photoBooth, uint camId, uint fps) :
 
 Camera::~Camera()
 {
-
+    m_isRunning = false;
+    m_timer->stop();
+    delete m_timer;
 }
 
 void Camera::loop()
 {
-    while(m_isRunning){
-        qDebug() << QDateTime::currentDateTime().toString("yyyy/MM/dd hh:mm:ss,zzz");
-    }
+    if (!m_isRunning)
+        return;
+
+    cv::Mat frame;
+    QImage qt_image;
+    m_cap >> frame;
+    cvtColor(frame, frame, cv::COLOR_BGR2RGB);
+    qt_image = QImage((const unsigned char*) (frame.data), frame.cols, frame.rows, QImage::Format_RGB888);
+
+    m_camView->setPixmap(QPixmap::fromImage(qt_image));
+
 }
 
 void Camera::start()
 {
+    if (m_isRunning)
+        return;
+
     m_cap.open(m_camId);
     if (!m_cap.isOpened()){
         qDebug() << "ERROR: Impossible to connect to camera" << m_camId;
@@ -33,9 +45,9 @@ void Camera::start()
     }
     m_isRunning = true;
 
-    m_timer = new QTimer(m_photoBooth);
-    //QObject::connect(m_timer, &QTimer::timeout, &Camera::loop);
-    m_timer->start((int)(1000/m_fps));
+    m_timer = new QTimer(this);
+    connect(m_timer, &QTimer::timeout, this, &Camera::loop);
+    m_timer->start(1000/m_fps);
 }
 
 void Camera::stop()

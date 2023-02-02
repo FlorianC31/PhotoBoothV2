@@ -28,7 +28,7 @@ public:
     ~PhotoBooth();
 
 private:
-    Ui::PhotoBooth* ui;
+    Ui::PhotoBooth* m_ui;
     Camera* m_camera;
     CamTrigger* m_camTrigger;
     Photo* m_photo;

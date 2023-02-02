@@ -4,7 +4,7 @@
 
 PhotoBooth::PhotoBooth(QWidget *parent)
     : QWidget(parent),
-    ui(new Ui::PhotoBooth),
+    m_ui(new Ui::PhotoBooth),
     m_camera(nullptr),
     m_camTrigger(nullptr),
     m_photo(nullptr),
@@ -15,16 +15,16 @@ PhotoBooth::PhotoBooth(QWidget *parent)
     m_printerFan(nullptr),
     m_light(nullptr)
 {
-    ui->setupUi(this);
+    m_ui->setupUi(this);
 
-    QObject::connect(ui->veilleButton, &QPushButton::clicked, this, &PhotoBooth::showCam);
-    QObject::connect(ui->buttonIncrease, &QPushButton::clicked, this, [=]() {PhotoBooth::updateNbPrint(+1);});
-    QObject::connect(ui->buttonDecrease, &QPushButton::clicked, this, [=]() {PhotoBooth::updateNbPrint(-1);});
-    QObject::connect(ui->buttonPrinter, &QPushButton::clicked, this, &PhotoBooth::print);
-    QObject::connect(ui->buttonPhoto, &QPushButton::clicked, this, &PhotoBooth::takePhoto);
-    QObject::connect(ui->buttonCancel, &QPushButton::clicked, this, &PhotoBooth::goToSleep);
-    QObject::connect(ui->buttonRestart, &QPushButton::clicked, this, &PhotoBooth::showCam);
-    QObject::connect(ui->buttonExit, &QPushButton::clicked, this, &PhotoBooth::showCam);
+    QObject::connect(m_ui->veilleButton, &QPushButton::clicked, this, &PhotoBooth::showCam);
+    QObject::connect(m_ui->buttonIncrease, &QPushButton::clicked, this, [=]() {PhotoBooth::updateNbPrint(+1);});
+    QObject::connect(m_ui->buttonDecrease, &QPushButton::clicked, this, [=]() {PhotoBooth::updateNbPrint(-1);});
+    QObject::connect(m_ui->buttonPrinter, &QPushButton::clicked, this, &PhotoBooth::print);
+    QObject::connect(m_ui->buttonPhoto, &QPushButton::clicked, this, &PhotoBooth::takePhoto);
+    QObject::connect(m_ui->buttonCancel, &QPushButton::clicked, this, &PhotoBooth::goToSleep);
+    QObject::connect(m_ui->buttonRestart, &QPushButton::clicked, this, &PhotoBooth::showCam);
+    QObject::connect(m_ui->buttonExit, &QPushButton::clicked, this, &PhotoBooth::showCam);
 
     if (!readingSettingsFile())
         this->close();
@@ -32,8 +32,7 @@ PhotoBooth::PhotoBooth(QWidget *parent)
     settingDisplay();
     settingRelayDevices();
 
-    m_camera = new Camera(this, m_cameraDevice, m_fps);
-
+    m_camera = new Camera(m_ui->camView, m_cameraDevice, m_fps);
     showCam();
     //showPhoto();
 }
@@ -45,7 +44,7 @@ PhotoBooth::~PhotoBooth()
     delete m_pcFan;
     delete m_printerFan;
     delete m_light;
-    delete ui;
+    delete m_ui;
 }
 
 /**
@@ -104,35 +103,35 @@ bool PhotoBooth::readingSettingsFile()
 
 void PhotoBooth::settingDisplay()
 {
-    ui->compteur->setText(QString::number(m_printCounter));
+    m_ui->compteur->setText(QString::number(m_printCounter));
     if (!m_modeDev)
-        ui->warning->hide();
+        m_ui->warning->hide();
 }
 
 void PhotoBooth::showCam()
 {
-    ui->veilleButton->hide();
-    ui->widgetPrint->hide();
+    m_ui->veilleButton->hide();
+    m_ui->widgetPrint->hide();
 
     m_camera->start();
-    ui->widgetPhoto->show();
+    m_ui->widgetPhoto->show();
 
     m_state = SHOWING_CAM;
 }
 
 void PhotoBooth::showPhoto()
 {
-    ui->veilleButton->hide();
-    ui->widgetPhoto->hide();
+    m_ui->veilleButton->hide();
+    m_ui->widgetPhoto->hide();
     m_state = DISPLAY_PIC;
     m_nbPrint = 1;
     updateNbPrint(0);
-    ui->widgetPrint->show();
+    m_ui->widgetPrint->show();
 }
 
 void PhotoBooth::goToSleep()
 {
-    ui->veilleButton->show();
+    m_ui->veilleButton->show();
 }
 
 void PhotoBooth::exit()
@@ -147,31 +146,29 @@ void PhotoBooth::updateNbPrint(int increment)
 
     // If no photo left in the printer, the print button are disabled
     if (m_printCounter == 0) {
-        ui->nbPrintLabel->setText(QString::number(0));
-        btnDisable(ui->buttonIncrease);
-        btnDisable(ui->buttonDecrease);
-        ui->buttonPrinter->hide();
+        m_ui->nbPrintLabel->setText(QString::number(0));
+        btnDisable(m_ui->buttonIncrease);
+        btnDisable(m_ui->buttonDecrease);
+        m_ui->buttonPrinter->hide();
         return;
     }
 
-    qDebug() << "increment: " << increment;
-
-    btnActivate(ui->buttonIncrease);
-    btnActivate(ui->buttonDecrease);
-    btnActivate(ui->buttonPrinter);
+    btnActivate(m_ui->buttonIncrease);
+    btnActivate(m_ui->buttonDecrease);
+    btnActivate(m_ui->buttonPrinter);
 
     m_nbPrint += increment;
     if (m_nbPrint <= 1) {
         m_nbPrint = 1;
-        btnDisable(ui->buttonDecrease);
+        btnDisable(m_ui->buttonDecrease);
     }
     else if (m_nbPrint >= fmin(m_nbPrintMax, m_printCounter))
     {
         m_nbPrint = fmin(m_nbPrintMax, m_printCounter);
-        btnDisable(ui->buttonIncrease);
+        btnDisable(m_ui->buttonIncrease);
     }
 
-    ui->nbPrintLabel->setText(QString::number(m_nbPrint));
+    m_ui->nbPrintLabel->setText(QString::number(m_nbPrint));
 
 }
 
@@ -196,7 +193,7 @@ void PhotoBooth::print()
 
     // update print counter
     m_printCounter -= m_nbPrint;
-    ui->compteur->setText(QString::number(m_printCounter));
+    m_ui->compteur->setText(QString::number(m_printCounter));
 
     // update print counter in settings.ini file
     QSettings settings(m_settingFile, QSettings::IniFormat);

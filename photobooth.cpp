@@ -32,6 +32,8 @@ PhotoBooth::PhotoBooth(QWidget *parent)
     settingDisplay();
     settingRelayDevices();
 
+    m_camTrigger = new CamTrigger();
+
     m_camera = new Camera(m_ui->camView, m_cameraDevice, m_fps);
     showCam();
     //showPhoto();

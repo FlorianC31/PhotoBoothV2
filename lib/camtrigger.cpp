@@ -15,8 +15,9 @@
 
 #define MOVE_DISTANCE 2000 // px
 
-CamTrigger::CamTrigger() :
-    m_timer(nullptr)
+CamTrigger::CamTrigger(bool secondScreen) :
+    m_timer(nullptr),
+    m_secondScreen(secondScreen)
 {
 
     m_imagingEdgeDesktop = new IedWindow("Imaging Edge Desktop");
@@ -45,7 +46,6 @@ CamTrigger::~CamTrigger()
 
 void CamTrigger::loop()
 {
-    qDebug() << "Loop";
     m_timer->stop();
     m_remote->open();
     m_timer->start(LOOP_PERIOD);
@@ -53,7 +53,8 @@ void CamTrigger::loop()
 
 void CamTrigger::focus(bool preShot)
 {
-    m_remote->move();
+    if (m_secondScreen)
+        m_remote->move();
     if (preShot) {
         m_remote->pressKey(G);
         Sleep(500);
@@ -67,7 +68,8 @@ void CamTrigger::focus(bool preShot)
         Sleep(500);
         m_remote->releaseKey(G);
     }
-    m_remote->move(true);
+    if (m_secondScreen)
+        m_remote->move(true);
 }
 
 void CamTrigger::trigger()
@@ -254,6 +256,8 @@ void RemoteWindow::open()
                 m_state = CAMERA_LOADING;
             else if (isFinalRemote())
                 m_state = RUNING;
+            else if (isDisconnectMsg())
+                okDisconnect();
             else
                 raiseErrorMsg("initializing Remote window");
             break;
@@ -308,6 +312,15 @@ void RemoteWindow::raiseErrorMsg(std::string errorMsg) {
     m_state = INIT;
 }
 
+void RemoteWindow::okDisconnect()
+{
+    // Click OK on warning msgBox
+    pressKey(ENTER);
+    Sleep(10);
+    releaseKey(ENTER);
+
+    openPreRemote();
+}
 
 void RemoteWindow::refresh()
 {
@@ -315,6 +328,8 @@ void RemoteWindow::refresh()
 
     // Click OK on warning msgBox
     pressKey(ENTER);
+    Sleep(10);
+    releaseKey(ENTER);
 
     int nbTries = 0;
     while (!isPreRemote() && nbTries < MAX_NB_ACTIVATE_TRIES) {
@@ -331,6 +346,7 @@ void RemoteWindow::refresh()
 void RemoteWindow::loadCamera()
 {
     qDebug() << "Load camera";
+    Sleep(2000); // Wait 2000ms to let time to PreRemote to show
     m_tempo = 0;
     click(120, 75, true);
     m_state = CAMERA_LOADING;

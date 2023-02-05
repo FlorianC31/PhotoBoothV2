@@ -65,14 +65,16 @@ public:
 private:
     bool isPreRemote() {return checkSize(930, 376);};
     bool isWarningMsg() {return checkSize(427, 159);};
+    bool isDisconnectMsg() {return checkSize(369, 159);};
     bool isLoading() {return checkSize(541, 245);};
-    bool isFinalRemote() {return isOpen() && !isPreRemote() && !isWarningMsg() && !isLoading();};
+    bool isFinalRemote() {return isOpen() && !isPreRemote() && !isWarningMsg() && !isLoading() && !isDisconnectMsg();};
     bool liveViewIsClose() {return checkSize(325, 0);};
     void loadCamera();
     void refresh();
     void openPreRemote();
     void raiseErrorMsg(std::string errorMsg);
     void hideLiveView();
+    void okDisconnect();
 
     enum State{
         INIT,
@@ -93,7 +95,7 @@ class CamTrigger : public QObject
     Q_OBJECT
 
 public:
-    CamTrigger();
+    CamTrigger(bool secondScreen);
     ~CamTrigger();
 
     void focus(bool preShoot = false);
@@ -103,6 +105,7 @@ private:
     IedWindow* m_imagingEdgeDesktop;
     RemoteWindow* m_remote;
     QTimer* m_timer;
+    bool m_secondScreen;
 
 private slots:
     void loop();

@@ -32,9 +32,12 @@ PhotoBooth::PhotoBooth(QWidget *parent)
     settingDisplay();
     settingRelayDevices();
 
-    m_camTrigger = new CamTrigger();
+    m_camTrigger = new CamTrigger(m_secondScreen);
 
     m_camera = new Camera(m_ui->camView, m_cameraDevice, m_fps);
+
+
+
     showCam();
     //showPhoto();
 }
@@ -89,6 +92,8 @@ bool PhotoBooth::readingSettingsFile()
     // read dev section
     settings.beginReadArray("dev");
     m_modeDev = settings.value("modeDev").toBool();
+    m_fullScreen = settings.value("fullScreen").toBool();
+    m_secondScreen = settings.value("secondScreen").toBool();
     settings.endArray();
 
     // read HMI section
@@ -108,6 +113,12 @@ void PhotoBooth::settingDisplay()
     m_ui->compteur->setText(QString::number(m_printCounter));
     if (!m_modeDev)
         m_ui->warning->hide();
+
+    if (m_secondScreen)
+        move(2000, 200);
+
+    if (m_fullScreen)
+        showFullScreen();
 }
 
 void PhotoBooth::showCam()

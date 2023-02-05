@@ -51,6 +51,8 @@ private:
     bool m_mirror;
     bool m_addWatermark;
     bool m_modeDev;
+    bool m_fullScreen;
+    bool m_secondScreen;
     uint m_fps;
     uint m_relayDevice;
     uint m_cameraDevice;

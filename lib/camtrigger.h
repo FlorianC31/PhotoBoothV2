@@ -4,6 +4,15 @@
 
 #include <windows.h>
 #include <string>
+#include <QtCore>
+
+enum KEY{
+    L,
+    G,
+    AND,
+    CTRL,
+    ENTER
+};
 
 
 struct Point{
@@ -13,20 +22,25 @@ struct Point{
 
 class Window
 {
-private:
-
 public:
     Window(std::string title) : m_title(title) {};
     void click(int x, int y, bool doubleClick);
     bool isOpen();
     void printSize();
     void show() {activate();};
-    void pressKey(BYTE key, BYTE key2 = 0);
+    void pressKey(KEY key) {keyboard(key, 0);};
+    void releaseKey(KEY key) {keyboard(key, KEYEVENTF_KEYUP);};
+    void move(bool back = false);
+
+private:
+    void keyboard(KEY key, DWORD action);
 
 protected:
     std::string m_title;
     HWND m_handle;
+    int m_initXPos;
 
+    void init();
     bool isActivated() {return GetForegroundWindow() == m_handle;};
     void activate();
     Point getPos();
@@ -53,10 +67,12 @@ private:
     bool isWarningMsg() {return checkSize(427, 159);};
     bool isLoading() {return checkSize(541, 245);};
     bool isFinalRemote() {return isOpen() && !isPreRemote() && !isWarningMsg() && !isLoading();};
+    bool liveViewIsClose() {return checkSize(325, 0);};
     void loadCamera();
     void refresh();
     void openPreRemote();
     void raiseErrorMsg(std::string errorMsg);
+    void hideLiveView();
 
     enum State{
         INIT,
@@ -72,20 +88,24 @@ private:
 
 
 
-class CamTrigger
+class CamTrigger : public QObject
 {
+    Q_OBJECT
+
 public:
     CamTrigger();
     ~CamTrigger();
 
+    void focus(bool preShoot = false);
+    void trigger();
 
 private:
-    void loop();
-
     IedWindow* m_imagingEdgeDesktop;
     RemoteWindow* m_remote;
-    int m_tempo;
-    bool m_wait;
+    QTimer* m_timer;
+
+private slots:
+    void loop();
 
 };
 

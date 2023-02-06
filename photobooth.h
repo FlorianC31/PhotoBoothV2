@@ -57,6 +57,10 @@ private:
     uint m_relayDevice;
     uint m_cameraDevice;
 
+    QTimer* m_countDownTimer;
+    QTimer* m_sleepTimer;
+    int m_count;
+
     QString m_font;
     double m_fontSizeRatio;
     QMap<char, uint> m_backgroundColor;
@@ -68,7 +72,6 @@ private:
 
     void showCam();
     void showPhoto();
-    void goToSleep();
     void exit();
 
     void updateNbPrint(int increment);
@@ -76,12 +79,18 @@ private:
     void btnDisable(QPushButton* button);
     void print();
     void takePhoto();
+    void treatPhoto();
+    void checkIso();
+    void reinitSleep();
 
     Relay* m_relay;
     RelayDevice* m_pcFan;
     RelayDevice* m_printerFan;
     RelayDevice* m_light;
 
+private slots:
+    void countDown();
+    void goToSleep();
 };
 
 #endif // PhotoBooth_H

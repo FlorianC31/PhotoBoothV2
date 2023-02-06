@@ -10,6 +10,8 @@ PhotoBooth::PhotoBooth(QWidget *parent)
     m_photo(nullptr),
     m_printer(nullptr),
     m_settingFile("settings.ini"),
+    m_countDownTimer(nullptr),
+    m_sleepTimer(nullptr),
     m_relay(nullptr),
     m_pcFan(nullptr),
     m_printerFan(nullptr),
@@ -24,7 +26,12 @@ PhotoBooth::PhotoBooth(QWidget *parent)
     QObject::connect(m_ui->buttonPhoto, &QPushButton::clicked, this, &PhotoBooth::takePhoto);
     QObject::connect(m_ui->buttonCancel, &QPushButton::clicked, this, &PhotoBooth::goToSleep);
     QObject::connect(m_ui->buttonRestart, &QPushButton::clicked, this, &PhotoBooth::showCam);
-    QObject::connect(m_ui->buttonExit, &QPushButton::clicked, this, &PhotoBooth::showCam);
+    QObject::connect(m_ui->buttonExit, &QPushButton::clicked, this, &PhotoBooth::exit);
+
+
+    m_countDownTimer = new QTimer(this);
+    connect(m_countDownTimer, &QTimer::timeout, this, &PhotoBooth::countDown);
+    connect(m_sleepTimer, &QTimer::timeout, this, &PhotoBooth::goToSleep);
 
     if (!readingSettingsFile())
         this->close();
@@ -35,8 +42,6 @@ PhotoBooth::PhotoBooth(QWidget *parent)
     m_camTrigger = new CamTrigger(m_secondScreen);
 
     m_camera = new Camera(m_ui->camView, m_cameraDevice, m_fps);
-
-
 
     showCam();
     //showPhoto();
@@ -123,6 +128,8 @@ void PhotoBooth::settingDisplay()
 
 void PhotoBooth::showCam()
 {
+    reinitSleep();
+
     m_ui->veilleButton->hide();
     m_ui->widgetPrint->hide();
 
@@ -144,6 +151,7 @@ void PhotoBooth::showPhoto()
 
 void PhotoBooth::goToSleep()
 {
+    m_sleepTimer->stop();
     m_ui->veilleButton->show();
 }
 
@@ -152,8 +160,16 @@ void PhotoBooth::exit()
     this->close();
 }
 
+void PhotoBooth::reinitSleep()
+{
+    m_sleepTimer->stop();
+    m_sleepTimer->start(60000);
+}
+
 void PhotoBooth::updateNbPrint(int increment)
 {
+    reinitSleep();
+
     if (m_state != DISPLAY_PIC)
         return;
 
@@ -197,6 +213,8 @@ void PhotoBooth::btnDisable(QPushButton* button)
 
 void PhotoBooth::print()
 {
+    reinitSleep();
+
     // if no photo left in the printer, no effect on the print button
     if (m_printCounter ==0)
         return;
@@ -219,9 +237,50 @@ void PhotoBooth::print()
     showCam();
 }
 
+
+void PhotoBooth::countDown()
+{
+    m_count -= 1;
+    m_ui->countdown->setText(QString::number(m_count));
+
+    switch (m_count) {
+    case 4:
+        m_camTrigger->focus();
+        break;
+    case 2:
+        m_ui->lookUp->show();
+        break;
+    case 0:
+        m_camTrigger->trigger();
+        treatPhoto();
+        break;
+    }
+}
+
+
 void PhotoBooth::takePhoto()
 {
+    m_sleepTimer->stop();
+    m_ui->lookUp->hide();
+    m_ui->camView->hide();
+    m_ui->buttonPhoto->hide();
+    m_ui->widgetPhoto->show();
+    m_count = 6;
+    m_countDownTimer->start(1000);
+}
+
+void PhotoBooth::treatPhoto()
+{
     showPhoto();
+    //m_photo->getLast();
+    checkIso();
+    m_ui->widgetPrint->show();
+    m_sleepTimer->start(60000);
+}
+
+void PhotoBooth::checkIso()
+{
+
 }
 
 void PhotoBooth::settingRelayDevices()

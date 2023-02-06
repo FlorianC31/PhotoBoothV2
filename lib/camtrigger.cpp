@@ -24,6 +24,7 @@ CamTrigger::CamTrigger(bool secondScreen) :
     m_remote = new RemoteWindow("Remote", m_imagingEdgeDesktop);
 
     qDebug() << "Initial Remote Opening";
+    m_imagingEdgeDesktop->open();
     m_remote->open();
 
     // lunch a useless trigger to disable hasardous previous focus locked
@@ -236,6 +237,9 @@ RemoteWindow::RemoteWindow(std::string title, IedWindow* iedWindow) :
 
 void RemoteWindow::open()
 {
+    if (isFinalRemote())
+        return;
+
     if (!isFinalRemote()){
         m_state = INIT;
         m_tempo = 0;

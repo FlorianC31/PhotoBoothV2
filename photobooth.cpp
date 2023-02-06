@@ -30,6 +30,7 @@ PhotoBooth::PhotoBooth(QWidget *parent)
 
 
     m_countDownTimer = new QTimer(this);
+    m_sleepTimer = new QTimer(this);
     connect(m_countDownTimer, &QTimer::timeout, this, &PhotoBooth::countDown);
     connect(m_sleepTimer, &QTimer::timeout, this, &PhotoBooth::goToSleep);
 
@@ -251,6 +252,7 @@ void PhotoBooth::countDown()
         m_ui->lookUp->show();
         break;
     case 0:
+        m_countDownTimer->stop();
         m_camTrigger->trigger();
         treatPhoto();
         break;

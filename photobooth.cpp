@@ -34,22 +34,23 @@ PhotoBooth::PhotoBooth(QWidget *parent)
     connect(m_countDownTimer, &QTimer::timeout, this, &PhotoBooth::countDown);
     connect(m_sleepTimer, &QTimer::timeout, this, &PhotoBooth::goToSleep);
 
-    if (!readingSettingsFile())
-        this->close();
+    triggerThread.start();
+    m_camTrigger = new CamTrigger();
+    m_camTrigger->moveToThread(&triggerThread);
 
-    settingDisplay();
-    settingRelayDevices();
+    connect(this, &PhotoBooth::initSignal, [=](bool secondScreen) {m_camTrigger->init(secondScreen);});
+    connect(this, &PhotoBooth::focusSignal, m_camTrigger, &CamTrigger::focus);
+    connect(this, &PhotoBooth::triggerSignal, m_camTrigger, &CamTrigger::trigger);
 
-    m_camTrigger = new CamTrigger(m_secondScreen);
-
-    m_camera = new Camera(m_ui->camView, m_cameraDevice, m_fps);
-
-    showCam();
-    //showPhoto();
+    init();
 }
 
 PhotoBooth::~PhotoBooth()
 {
+    triggerThread.quit();
+    triggerThread.wait();
+    delete m_camTrigger;
+
     delete m_camera;
     delete m_relay;
     delete m_pcFan;
@@ -57,6 +58,26 @@ PhotoBooth::~PhotoBooth()
     delete m_light;
     delete m_ui;
 }
+
+
+void PhotoBooth::init()
+{
+    if (!readingSettingsFile())
+        this->close();
+
+    settingDisplay();
+    settingRelayDevices();
+
+
+    emit initSignal(m_secondScreen);
+
+    m_camera = new Camera(m_ui->camView, m_cameraDevice, m_fps);
+
+    showCam();
+    //showPhoto();
+}
+
+
 
 /**
  * @brief PhotoBooth::readingSettingsFile Read the settings.ini file to get all the user settings
@@ -246,14 +267,16 @@ void PhotoBooth::countDown()
 
     switch (m_count) {
     case 4:
-        m_camTrigger->focus();
+        emit focusSignal();
+        //m_camTrigger->focus();
         break;
     case 2:
         m_ui->lookUp->show();
         break;
     case 0:
         m_countDownTimer->stop();
-        m_camTrigger->trigger();
+        emit triggerSignal();
+        //m_camTrigger->trigger();
         treatPhoto();
         break;
     }

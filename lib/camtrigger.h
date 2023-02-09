@@ -31,6 +31,7 @@ public:
     void pressKey(KEY key) {keyboard(key, 0);};
     void releaseKey(KEY key) {keyboard(key, KEYEVENTF_KEYUP);};
     void move(bool back = false);
+    void init();
 
 private:
     void keyboard(KEY key, DWORD action);
@@ -40,7 +41,6 @@ protected:
     HWND m_handle;
     int m_initXPos;
 
-    void init();
     bool isActivated() {return GetForegroundWindow() == m_handle;};
     void activate();
     Point getPos();
@@ -67,14 +67,15 @@ private:
     bool isWarningMsg() {return checkSize(427, 159);};
     bool isDisconnectMsg() {return checkSize(369, 159);};
     bool isLoading() {return checkSize(541, 245);};
-    bool isFinalRemote() {return isOpen() && !isPreRemote() && !isWarningMsg() && !isLoading() && !isDisconnectMsg();};
-    bool liveViewIsClose() {return checkSize(325, 0);};
+    bool isFinalRemote() {return checkSize(325, 0);};
+    bool isLiveView() {return isOpen() && !isPreRemote() && !isWarningMsg() && !isLoading() && !isDisconnectMsg() && !isFinalRemote();};
     void loadCamera();
     void refresh();
     void openPreRemote();
     void raiseErrorMsg(std::string errorMsg);
     void hideLiveView();
     void okDisconnect();
+    void closeLiveView();
 
     enum State{
         INIT,
@@ -95,11 +96,9 @@ class CamTrigger : public QObject
     Q_OBJECT
 
 public:
-    CamTrigger(bool secondScreen);
+    CamTrigger();
     ~CamTrigger();
-
-    void focus(bool preShoot = false);
-    void trigger();
+    void init(bool secondScreen);
 
 private:
     IedWindow* m_imagingEdgeDesktop;
@@ -108,7 +107,11 @@ private:
     bool m_secondScreen;
 
 private slots:
-    void loop();
+    void loop();    
+
+public slots:
+    void focus();
+    void trigger();
 
 };
 

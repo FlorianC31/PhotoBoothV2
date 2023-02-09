@@ -15,19 +15,25 @@
 
 #define MOVE_DISTANCE 2000 // px
 
-CamTrigger::CamTrigger(bool secondScreen) :
-    m_timer(nullptr),
-    m_secondScreen(secondScreen)
+CamTrigger::CamTrigger() :
+    m_timer(nullptr)
 {
 
     m_imagingEdgeDesktop = new IedWindow("Imaging Edge Desktop");
     m_remote = new RemoteWindow("Remote", m_imagingEdgeDesktop);
 
+}
+
+void CamTrigger::init(bool secondScreen)
+{
+    m_secondScreen = secondScreen;
+
     qDebug() << "Initial Remote Opening";
     m_imagingEdgeDesktop->open();
     m_remote->open();
+    m_remote->init();
 
-    // lunch a useless trigger to disable hasardous previous focus locked
+    // launch a useless trigger to disable hasardous previous focus locked
     trigger();
 
     // Backgroung runing loop to check if Remote is open
@@ -52,34 +58,28 @@ void CamTrigger::loop()
     m_timer->start(LOOP_PERIOD);
 }
 
-void CamTrigger::focus(bool preShot)
+void CamTrigger::focus()
 {
-    if (m_secondScreen)
+    if (!m_secondScreen)
         m_remote->move();
-    if (preShot) {
-        m_remote->pressKey(G);
-        Sleep(500);
-        m_remote->releaseKey(G);
-    }
-    else {
-        m_remote->pressKey(G);
-        Sleep(2000);
-        m_remote->releaseKey(G);
-        m_remote->pressKey(G);
-        Sleep(500);
-        m_remote->releaseKey(G);
-    }
-    if (m_secondScreen)
+
+    m_remote->pressKey(G);
+    Sleep(200);
+    m_remote->releaseKey(G);
+
+    if (!m_secondScreen)
         m_remote->move(true);
 }
 
 void CamTrigger::trigger()
 {
-    m_remote->move();
+    if (!m_secondScreen)
+        m_remote->move();
     m_remote->pressKey(AND);
     Sleep(400);
     m_remote->releaseKey(AND);
-    m_remote->move(true);
+    if (!m_secondScreen)
+        m_remote->move(true);
 }
 
 
@@ -199,10 +199,15 @@ void Window::move(bool back)
     GetWindowRect(m_handle, &windowRect);
 
     if (back)
+    {
         SetWindowPos(m_handle, 0, m_initXPos, windowRect.top, windowRect.right - windowRect.left, windowRect.bottom - windowRect.top, SWP_NOZORDER | SWP_NOACTIVATE);
+        qDebug() << m_title.c_str() << "moved back to x =" << m_initXPos;
+    }
     else
+    {
         SetWindowPos(m_handle, 0, m_initXPos + MOVE_DISTANCE, windowRect.top, windowRect.right - windowRect.left, windowRect.bottom - windowRect.top, SWP_NOZORDER | SWP_NOACTIVATE);
-
+        qDebug() << m_title.c_str() << "moved to x =" << m_initXPos + MOVE_DISTANCE;
+    }
 }
 
 
@@ -238,7 +243,10 @@ RemoteWindow::RemoteWindow(std::string title, IedWindow* iedWindow) :
 void RemoteWindow::open()
 {
     if (isFinalRemote())
+    {
+        qDebug() << "LOOP - Camera Final Remote already open";
         return;
+    }
 
     if (!isFinalRemote()){
         m_state = INIT;
@@ -292,6 +300,8 @@ void RemoteWindow::open()
             qDebug() << "State: CAMERA_LOADING";
             if (isFinalRemote())
                 m_state = RUNING;
+            if (isLiveView())
+                closeLiveView();
             else if (m_tempo == MAX_LOAD_TEMPO)
                 refresh();
             else
@@ -300,14 +310,11 @@ void RemoteWindow::open()
 
         case RUNING:
             qDebug() << "State: RUNING";
-            hideLiveView();
             break;
         }
 
         Sleep(1000);
     }
-
-    Window::init();
 
 }
 
@@ -371,9 +378,8 @@ void RemoteWindow::openPreRemote()
 }
 
 
-void RemoteWindow::hideLiveView() {
-
-    if (!liveViewIsClose()) {
+void RemoteWindow::closeLiveView() {
+    if (!isFinalRemote()) {
         pressKey(CTRL);
         Sleep(5);
         pressKey(L);
@@ -382,4 +388,5 @@ void RemoteWindow::hideLiveView() {
         Sleep(5);
         releaseKey(CTRL);
     }
+    m_state = RUNING;
 }

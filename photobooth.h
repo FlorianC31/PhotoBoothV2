@@ -5,6 +5,7 @@
 #include <QWidget>
 #include <QtCore>
 #include <QPushButton>
+#include <QThread>
 
 #include "lib/camera.h"
 #include "lib/camtrigger.h"
@@ -57,6 +58,8 @@ private:
     uint m_relayDevice;
     uint m_cameraDevice;
 
+    QThread triggerThread;
+
     QTimer* m_countDownTimer;
     QTimer* m_sleepTimer;
     int m_count;
@@ -66,6 +69,7 @@ private:
     QMap<char, uint> m_backgroundColor;
     QMap<QString, uint> m_relaysConfig;
 
+    void init();
     bool readingSettingsFile();
     void settingDisplay();
     void settingRelayDevices();
@@ -91,6 +95,11 @@ private:
 private slots:
     void countDown();
     void goToSleep();
+
+signals:
+    void initSignal(bool secondScreen);
+    void focusSignal();
+    void triggerSignal();
 };
 
 #endif // PhotoBooth_H

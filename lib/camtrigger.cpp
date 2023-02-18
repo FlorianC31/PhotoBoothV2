@@ -16,47 +16,38 @@
 #define MOVE_DISTANCE 2000 // px
 
 CamTrigger::CamTrigger() :
-    m_timer(nullptr)
+    m_triggerThread(nullptr)
 {
+    // Creation and initialisation of trigger thread
+    m_triggerThread = new QThread();
+    m_triggerThread->start();
+    this->moveToThread(m_triggerThread);
 
+    // Creation of both window objects
     m_imagingEdgeDesktop = new IedWindow("Imaging Edge Desktop");
     m_remote = new RemoteWindow("Remote", m_imagingEdgeDesktop);
 
-}
-
-void CamTrigger::init(bool secondScreen)
-{
-    m_secondScreen = secondScreen;
-
-    qDebug() << "Initial Remote Opening";
+    // Open remote windows
     m_imagingEdgeDesktop->open();
     m_remote->open();
-    m_remote->init();
 
     // launch a useless trigger to disable hasardous previous focus locked
     trigger();
 
-    // Backgroung runing loop to check if Remote is open
-    m_timer = new QTimer(this);
-    connect(m_timer, &QTimer::timeout, this, &CamTrigger::loop);
-    m_timer->start(LOOP_PERIOD);
-
 }
+
 
 CamTrigger::~CamTrigger()
 {
     delete m_imagingEdgeDesktop;
     delete m_remote;
-    m_timer->stop();
-    delete m_timer;
 }
 
-void CamTrigger::loop()
+void CamTrigger::check()
 {
-    m_timer->stop();
     m_remote->open();
-    m_timer->start(LOOP_PERIOD);
 }
+
 
 void CamTrigger::focus()
 {
@@ -76,7 +67,7 @@ void CamTrigger::trigger()
     if (!m_secondScreen)
         m_remote->move();
     m_remote->pressKey(AND);
-    Sleep(400);
+    Sleep(800);
     m_remote->releaseKey(AND);
     if (!m_secondScreen)
         m_remote->move(true);
@@ -270,6 +261,8 @@ void RemoteWindow::open()
                 m_state = RUNING;
             else if (isDisconnectMsg())
                 okDisconnect();
+            else if (isLiveView())
+                closeLiveView();
             else
                 raiseErrorMsg("initializing Remote window");
             break;
@@ -292,6 +285,10 @@ void RemoteWindow::open()
                 loadCamera();
             else if (isWarningMsg())
                 refresh();
+            else if (isFinalRemote())
+                m_state = RUNING;
+            else if (isLiveView())
+                closeLiveView();
             else
                 m_tempo++;
             break;
@@ -300,7 +297,7 @@ void RemoteWindow::open()
             qDebug() << "State: CAMERA_LOADING";
             if (isFinalRemote())
                 m_state = RUNING;
-            if (isLiveView())
+            else if (isLiveView())
                 closeLiveView();
             else if (m_tempo == MAX_LOAD_TEMPO)
                 refresh();

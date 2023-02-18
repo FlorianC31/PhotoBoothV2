@@ -2,6 +2,8 @@
 #include "ui_PhotoBooth.h"
 #include "lib/utils.h"
 
+#define CHECK_REMOTE_PERIOD 1000 //ms
+
 PhotoBooth::PhotoBooth(QWidget *parent)
     : QWidget(parent),
     m_ui(new Ui::PhotoBooth),
@@ -31,14 +33,15 @@ PhotoBooth::PhotoBooth(QWidget *parent)
 
     m_countDownTimer = new QTimer(this);
     m_sleepTimer = new QTimer(this);
+    m_remoteTimer = new QTimer(this);
     connect(m_countDownTimer, &QTimer::timeout, this, &PhotoBooth::countDown);
     connect(m_sleepTimer, &QTimer::timeout, this, &PhotoBooth::goToSleep);
+    connect(m_remoteTimer, &QTimer::timeout, this, &PhotoBooth::checkRemote);
+    m_remoteTimer->start(CHECK_REMOTE_PERIOD);
 
-    triggerThread.start();
     m_camTrigger = new CamTrigger();
-    m_camTrigger->moveToThread(&triggerThread);
 
-    connect(this, &PhotoBooth::initSignal, [=](bool secondScreen) {m_camTrigger->init(secondScreen);});
+    connect(this, &PhotoBooth::initSignal, [=](bool secondScreen) {m_camTrigger->setSecondScreen(secondScreen);});
     connect(this, &PhotoBooth::focusSignal, m_camTrigger, &CamTrigger::focus);
     connect(this, &PhotoBooth::triggerSignal, m_camTrigger, &CamTrigger::trigger);
 
@@ -72,12 +75,13 @@ void PhotoBooth::init()
     emit initSignal(m_secondScreen);
 
     m_camera = new Camera(m_ui->camView, m_cameraDevice, m_fps);
-
-    showCam();
-    //showPhoto();
 }
 
 
+void PhotoBooth::checkRemote()
+{
+    m_camTrigger->check();
+}
 
 /**
  * @brief PhotoBooth::readingSettingsFile Read the settings.ini file to get all the user settings
@@ -152,13 +156,32 @@ void PhotoBooth::showCam()
 {
     reinitSleep();
 
+    m_ui->lookUp->hide();
+    m_ui->countdown->hide();
+    m_ui->buttonPhoto->show();
+    m_ui->widgetPhoto->show();
     m_ui->veilleButton->hide();
     m_ui->widgetPrint->hide();
 
     m_camera->start();
-    m_ui->widgetPhoto->show();
 
     m_state = SHOWING_CAM;
+}
+
+void PhotoBooth::takePhoto()
+{
+    m_sleepTimer->stop();
+    m_ui->lookUp->hide();
+    m_ui->buttonPhoto->hide();
+    m_ui->lookUp->hide();
+
+    // Countdown initialisation
+    m_count = 6;
+    m_countDownTimer->start(1000);
+    m_ui->countdown->setText(QString::number(m_count));
+    m_ui->countdown->show();
+    m_ui->buttonPhoto->hide();
+
 }
 
 void PhotoBooth::showPhoto()
@@ -282,17 +305,6 @@ void PhotoBooth::countDown()
     }
 }
 
-
-void PhotoBooth::takePhoto()
-{
-    m_sleepTimer->stop();
-    m_ui->lookUp->hide();
-    m_ui->camView->hide();
-    m_ui->buttonPhoto->hide();
-    m_ui->widgetPhoto->show();
-    m_count = 6;
-    m_countDownTimer->start(1000);
-}
 
 void PhotoBooth::treatPhoto()
 {

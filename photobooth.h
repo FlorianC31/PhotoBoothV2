@@ -62,6 +62,7 @@ private:
 
     QTimer* m_countDownTimer;
     QTimer* m_sleepTimer;
+    QTimer* m_remoteTimer;
     int m_count;
 
     QString m_font;
@@ -95,6 +96,7 @@ private:
 private slots:
     void countDown();
     void goToSleep();
+    void checkRemote();
 
 signals:
     void initSignal(bool secondScreen);

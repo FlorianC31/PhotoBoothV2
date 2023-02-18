@@ -33,6 +33,7 @@ public:
     void move(bool back = false);
     void init();
 
+
 private:
     void keyboard(KEY key, DWORD action);
 
@@ -99,15 +100,14 @@ public:
     CamTrigger();
     ~CamTrigger();
     void init(bool secondScreen);
+    void check();
+    void setSecondScreen(bool secondScreen){m_secondScreen = secondScreen;};
 
 private:
     IedWindow* m_imagingEdgeDesktop;
     RemoteWindow* m_remote;
-    QTimer* m_timer;
     bool m_secondScreen;
-
-private slots:
-    void loop();    
+    QThread* m_triggerThread;
 
 public slots:
     void focus();

@@ -31,6 +31,7 @@ private:
     uint m_fps;
     cv::VideoCapture m_cap;
     QTimer* m_timer;
+    QThread* m_cameraThread;
 
 private slots:
     void loop();

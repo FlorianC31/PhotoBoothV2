@@ -71,7 +71,6 @@ void PhotoBooth::init()
     settingDisplay();
     settingRelayDevices();
 
-
     emit initSignal(m_secondScreen);
 
     m_camera = new Camera(m_ui->camView, m_cameraDevice, m_fps);

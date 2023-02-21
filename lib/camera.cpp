@@ -1,12 +1,10 @@
 #include "Camera.h"
 #include <QDebug>
 
-Camera::Camera(QLabel* camView, uint camId, uint fps) :
+Camera::Camera(QLabel* camView, uint camId) :
     m_isRunning(false),
     m_camView(camView),
     m_camId(camId),
-    m_fps(fps),
-    m_timer(nullptr),
     m_cameraThread(nullptr)
 {
     m_cameraThread = new QThread();
@@ -18,8 +16,6 @@ Camera::Camera(QLabel* camView, uint camId, uint fps) :
 Camera::~Camera()
 {
     m_isRunning = false;
-    m_timer->stop();
-    delete m_timer;
 }
 
 void Camera::loop()
@@ -48,10 +44,6 @@ void Camera::start()
         return;
     }
     m_isRunning = true;
-
-    m_timer = new QTimer(this);
-    connect(m_timer, &QTimer::timeout, this, &Camera::loop);        // Problème ici
-    m_timer->start(1000/m_fps);
 }
 
 void Camera::stop()

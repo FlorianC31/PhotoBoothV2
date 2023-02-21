@@ -18,7 +18,7 @@ class Camera : public QObject
     Q_OBJECT
 
 public:
-    Camera(QLabel* camView, uint camId, uint fps);
+    Camera(QLabel* camView, uint camId);
     ~Camera();
 
     void start();
@@ -28,12 +28,10 @@ private:
     bool m_isRunning;
     QLabel* m_camView;
     uint m_camId;
-    uint m_fps;
     cv::VideoCapture m_cap;
-    QTimer* m_timer;
     QThread* m_cameraThread;
 
-private slots:
+public slots:
     void loop();
 
 };

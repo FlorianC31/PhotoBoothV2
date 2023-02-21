@@ -6,6 +6,7 @@
 #include <QtCore>
 #include <QPushButton>
 #include <QThread>
+#include <QMovie>
 
 #include "lib/camera.h"
 #include "lib/camtrigger.h"
@@ -19,6 +20,7 @@ namespace Ui { class PhotoBooth; }
 QT_END_NAMESPACE
 
 class Camera;
+class CamTrigger;
 
 class PhotoBooth : public QWidget
 {
@@ -27,6 +29,8 @@ class PhotoBooth : public QWidget
 public:
     PhotoBooth(QWidget *parent = nullptr);
     ~PhotoBooth();
+    void startLoading();
+    void stopLoading();
 
 private:
     Ui::PhotoBooth* m_ui;
@@ -58,11 +62,10 @@ private:
     uint m_relayDevice;
     uint m_cameraDevice;
 
-    QThread triggerThread;
-
     QTimer* m_countDownTimer;
     QTimer* m_sleepTimer;
     QTimer* m_remoteTimer;
+    QTimer* m_cameraTimer;
     int m_count;
 
     QString m_font;
@@ -70,7 +73,6 @@ private:
     QMap<char, uint> m_backgroundColor;
     QMap<QString, uint> m_relaysConfig;
 
-    void init();
     bool readingSettingsFile();
     void settingDisplay();
     void settingRelayDevices();
@@ -97,6 +99,7 @@ private slots:
     void countDown();
     void goToSleep();
     void checkRemote();
+    void CameraLoop();
 
 signals:
     void initSignal(bool secondScreen);

@@ -14,6 +14,7 @@ PhotoBooth::PhotoBooth(QWidget *parent)
     m_settingFile("settings.ini"),
     m_countDownTimer(nullptr),
     m_sleepTimer(nullptr),
+    m_cameraTimer(nullptr),
     m_relay(nullptr),
     m_pcFan(nullptr),
     m_printerFan(nullptr),
@@ -30,29 +31,41 @@ PhotoBooth::PhotoBooth(QWidget *parent)
     QObject::connect(m_ui->buttonRestart, &QPushButton::clicked, this, &PhotoBooth::showCam);
     QObject::connect(m_ui->buttonExit, &QPushButton::clicked, this, &PhotoBooth::exit);
 
+    QMovie movie(QString::fromUtf8("ressources/Spinner-1s-400px_white.gif"));
+    m_ui->loading->setMovie(&movie);
+    movie.start();
+
+    if (!readingSettingsFile())
+        this->close();
+
+    settingDisplay();
 
     m_countDownTimer = new QTimer(this);
     m_sleepTimer = new QTimer(this);
     m_remoteTimer = new QTimer(this);
+    m_cameraTimer = new QTimer(this);
     connect(m_countDownTimer, &QTimer::timeout, this, &PhotoBooth::countDown);
     connect(m_sleepTimer, &QTimer::timeout, this, &PhotoBooth::goToSleep);
     connect(m_remoteTimer, &QTimer::timeout, this, &PhotoBooth::checkRemote);
+    connect(m_cameraTimer, &QTimer::timeout, this, &PhotoBooth::CameraLoop);
     m_remoteTimer->start(CHECK_REMOTE_PERIOD);
 
-    m_camTrigger = new CamTrigger();
+    m_camTrigger = new CamTrigger(this, m_secondScreen);
+    m_camera = new Camera(m_ui->camView, m_cameraDevice);
 
-    connect(this, &PhotoBooth::initSignal, [=](bool secondScreen) {m_camTrigger->setSecondScreen(secondScreen);});
     connect(this, &PhotoBooth::focusSignal, m_camTrigger, &CamTrigger::focus);
     connect(this, &PhotoBooth::triggerSignal, m_camTrigger, &CamTrigger::trigger);
 
-    init();
+    settingRelayDevices();
 }
 
 PhotoBooth::~PhotoBooth()
 {
-    triggerThread.quit();
-    triggerThread.wait();
     delete m_camTrigger;
+    delete m_countDownTimer;
+    delete m_sleepTimer;
+    delete m_remoteTimer;
+    delete m_cameraTimer;
 
     delete m_camera;
     delete m_relay;
@@ -62,24 +75,14 @@ PhotoBooth::~PhotoBooth()
     delete m_ui;
 }
 
-
-void PhotoBooth::init()
-{
-    if (!readingSettingsFile())
-        this->close();
-
-    settingDisplay();
-    settingRelayDevices();
-
-    emit initSignal(m_secondScreen);
-
-    m_camera = new Camera(m_ui->camView, m_cameraDevice, m_fps);
-}
-
-
 void PhotoBooth::checkRemote()
 {
-    m_camTrigger->check();
+    m_camTrigger->checkLoop();
+}
+
+void PhotoBooth::CameraLoop()
+{
+    m_camera->loop();
 }
 
 /**
@@ -163,6 +166,7 @@ void PhotoBooth::showCam()
     m_ui->widgetPrint->hide();
 
     m_camera->start();
+    m_cameraTimer->start(1000/m_fps);
 
     m_state = SHOWING_CAM;
 }
@@ -181,6 +185,21 @@ void PhotoBooth::takePhoto()
     m_ui->countdown->show();
     m_ui->buttonPhoto->hide();
 
+}
+
+void PhotoBooth::startLoading()
+{
+    m_ui->loading->show();
+    m_ui->veilleButton->hide();
+    m_ui->widgetPhoto->hide();
+    m_ui->widgetPrint->hide();
+    m_ui->compteur->hide();
+}
+
+void PhotoBooth::stopLoading()
+{
+    m_ui->compteur->show();
+    showCam();
 }
 
 void PhotoBooth::showPhoto()
@@ -326,3 +345,4 @@ void PhotoBooth::settingRelayDevices()
     m_printerFan = new RelayDevice(m_relay, m_relaysConfig["printerFan"]);
     m_light = new RelayDevice(m_relay, m_relaysConfig["light"]);
 }
+

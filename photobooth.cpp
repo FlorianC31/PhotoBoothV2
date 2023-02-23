@@ -4,8 +4,8 @@
 
 #define CHECK_REMOTE_PERIOD 1000 //ms
 
-PhotoBooth::PhotoBooth(QWidget *parent)
-    : QWidget(parent),
+PhotoBooth::PhotoBooth(QWidget *parent) :
+    m_application(parent),
     m_ui(new Ui::PhotoBooth),
     m_camera(nullptr),
     m_camTrigger(nullptr),
@@ -22,6 +22,7 @@ PhotoBooth::PhotoBooth(QWidget *parent)
 {
     m_ui->setupUi(this);
 
+    // Connect all buttons
     QObject::connect(m_ui->veilleButton, &QPushButton::clicked, this, &PhotoBooth::showCam);
     QObject::connect(m_ui->buttonIncrease, &QPushButton::clicked, this, [=]() {PhotoBooth::updateNbPrint(+1);});
     QObject::connect(m_ui->buttonDecrease, &QPushButton::clicked, this, [=]() {PhotoBooth::updateNbPrint(-1);});
@@ -31,15 +32,20 @@ PhotoBooth::PhotoBooth(QWidget *parent)
     QObject::connect(m_ui->buttonRestart, &QPushButton::clicked, this, &PhotoBooth::showCam);
     QObject::connect(m_ui->buttonExit, &QPushButton::clicked, this, &PhotoBooth::exit);
 
-    QMovie movie(QString::fromUtf8("ressources/Spinner-1s-400px_white.gif"));
-    m_ui->loading->setMovie(&movie);
-    movie.start();
+    // Get the loading gif
+    m_movie = new QMovie(QString::fromUtf8("ressources/Spinner-1s-400px_white.gif"));
+    m_ui->loading->setMovie(m_movie);
+    m_movie->start();
 
-    if (!readingSettingsFile())
+    // Read the settings file
+    if (!readingSettingsFile()) {
         this->close();
+    }
 
+    // Setting display
     settingDisplay();
 
+    // Creation of all timers
     m_countDownTimer = new QTimer(this);
     m_sleepTimer = new QTimer(this);
     m_remoteTimer = new QTimer(this);
@@ -50,17 +56,21 @@ PhotoBooth::PhotoBooth(QWidget *parent)
     connect(m_cameraTimer, &QTimer::timeout, this, &PhotoBooth::CameraLoop);
     m_remoteTimer->start(CHECK_REMOTE_PERIOD);
 
+    // Creation of children objects
     m_camTrigger = new CamTrigger(this, m_secondScreen);
     m_camera = new Camera(m_ui->camView, m_cameraDevice);
+    m_relay = new Relay(m_relayDevice);
 
+    // Setting children
+    settingRelayDevices();
     connect(this, &PhotoBooth::focusSignal, m_camTrigger, &CamTrigger::focus);
     connect(this, &PhotoBooth::triggerSignal, m_camTrigger, &CamTrigger::trigger);
-
-    settingRelayDevices();
 }
 
 PhotoBooth::~PhotoBooth()
 {
+    delete m_movie;
+
     delete m_camTrigger;
     delete m_countDownTimer;
     delete m_sleepTimer;
@@ -328,14 +338,10 @@ void PhotoBooth::treatPhoto()
 {
     showPhoto();
     //m_photo->getLast();
-    checkIso();
+    //m_photo->addWaterMark();
+    //m_photo->checkIso(m_isoMax);
     m_ui->widgetPrint->show();
     m_sleepTimer->start(60000);
-}
-
-void PhotoBooth::checkIso()
-{
-
 }
 
 void PhotoBooth::settingRelayDevices()

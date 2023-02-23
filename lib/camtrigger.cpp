@@ -18,6 +18,7 @@
 CamTrigger::CamTrigger(PhotoBooth* photoBooth, bool secondScreen) :
     m_photoBooth(photoBooth),
     m_triggerThread(nullptr),
+    m_state(INIT),
     m_title("Remote"),
     m_initXPos(500),
     m_secondScreen(secondScreen)
@@ -219,7 +220,7 @@ void CamTrigger::checkLoop()
             else if (isLoading())
                 m_state = CAMERA_LOADING;
             else if (isFinalRemote())
-                m_state = RUNING;
+                init();
             else if (isDisconnectMsg())
                 okDisconnect();
             else if (isLiveView())
@@ -247,7 +248,7 @@ void CamTrigger::checkLoop()
             else if (isWarningMsg())
                 refresh();
             else if (isFinalRemote())
-                m_state = RUNING;
+                init();
             else if (isLiveView())
                 closeLiveView();
             else if (m_tempo == REFRESH_TEMPO)
@@ -273,7 +274,11 @@ void CamTrigger::checkLoop()
         case RUNING:
             qDebug() << "State: RUNING";
             break;
+        default:
+            raiseErrorMsg("initalizing state");
+            break;
         }
+
 
         Sleep(1000);
     }

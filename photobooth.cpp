@@ -199,6 +199,7 @@ void PhotoBooth::takePhoto()
 
 void PhotoBooth::startLoading()
 {
+    qDebug() << "Start Loading";
     m_ui->loading->show();
     m_ui->veilleButton->hide();
     m_ui->widgetPhoto->hide();
@@ -208,8 +209,9 @@ void PhotoBooth::startLoading()
 
 void PhotoBooth::stopLoading()
 {
-    m_ui->compteur->show();
-    showCam();
+    qDebug() << "Stop Loading";
+    //m_ui->compteur->show();
+    //showCam();
 }
 
 void PhotoBooth::showPhoto()

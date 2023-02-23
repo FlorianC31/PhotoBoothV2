@@ -84,6 +84,10 @@ public slots:
     void focus();
     void trigger();
     void checkLoop();
+
+signals:
+    void startLoading();
+    void stopLoading();
 };
 
 #endif // CAMTRIGGER_H

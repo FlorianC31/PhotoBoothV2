@@ -29,15 +29,15 @@ class PhotoBooth : public QWidget
 public:
     PhotoBooth(QWidget *parent = nullptr);
     ~PhotoBooth();
-    void startLoading();
-    void stopLoading();
 
 private:
+    QWidget* m_application;
     Ui::PhotoBooth* m_ui;
     Camera* m_camera;
     CamTrigger* m_camTrigger;
     Photo* m_photo;
     Printer* m_printer;
+    QMovie* m_movie;
 
     enum State{
         SLEEPING,
@@ -87,7 +87,6 @@ private:
     void print();
     void takePhoto();
     void treatPhoto();
-    void checkIso();
     void reinitSleep();
 
     Relay* m_relay;
@@ -100,6 +99,10 @@ private slots:
     void goToSleep();
     void checkRemote();
     void CameraLoop();
+
+ public slots:
+    void startLoading();
+    void stopLoading();
 
 signals:
     void initSignal(bool secondScreen);

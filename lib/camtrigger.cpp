@@ -28,6 +28,8 @@ CamTrigger::CamTrigger(PhotoBooth* photoBooth, bool secondScreen) :
     m_triggerThread->start();
     this->moveToThread(m_triggerThread);
 
+    connect(this, &CamTrigger::startLoading, m_photoBooth, &PhotoBooth::startLoading);
+    connect(this, &CamTrigger::stopLoading, m_photoBooth, &PhotoBooth::stopLoading);
 }
 
 CamTrigger::~CamTrigger()
@@ -199,7 +201,7 @@ void CamTrigger::checkLoop()
         return;
     }
 
-    m_photoBooth->startLoading();
+    emit startLoading();
 
     if (!isFinalRemote()){
         m_state = INIT;
@@ -291,7 +293,7 @@ void CamTrigger::init()
 
     // launch a useless trigger to disable hasardous previous focus locked
     trigger();
-    m_photoBooth->stopLoading();
+    emit stopLoading();
 
     m_state = RUNING;
 }

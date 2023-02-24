@@ -18,7 +18,7 @@ class Camera : public QObject
     Q_OBJECT
 
 public:
-    Camera(QLabel* camView, uint camId);
+    Camera(QLabel* camView, uint camId, uint resolutionMode, bool upsideDown, bool mirror);
     ~Camera();
 
     void start();
@@ -28,8 +28,13 @@ private:
     bool m_isRunning;
     QLabel* m_camView;
     uint m_camId;
-    cv::VideoCapture m_cap;
+    cv::VideoCapture* m_cap;
     QThread* m_cameraThread;
+    int m_resolution[2];
+    int m_cropLeft;
+    int m_cropWidth;
+    bool m_upsideDown;
+    bool m_mirror;
 
 public slots:
     void loop();

@@ -5,7 +5,7 @@
 #define CHECK_REMOTE_PERIOD 1000 //ms
 
 PhotoBooth::PhotoBooth(QWidget *parent) :
-    m_application(parent),
+    QWidget(parent),
     m_ui(new Ui::PhotoBooth),
     m_camera(nullptr),
     m_camTrigger(nullptr),
@@ -54,11 +54,11 @@ PhotoBooth::PhotoBooth(QWidget *parent) :
     connect(m_sleepTimer, &QTimer::timeout, this, &PhotoBooth::goToSleep);
     connect(m_remoteTimer, &QTimer::timeout, this, &PhotoBooth::checkRemote);
     connect(m_cameraTimer, &QTimer::timeout, this, &PhotoBooth::CameraLoop);
-    m_remoteTimer->start(CHECK_REMOTE_PERIOD);
+    //m_remoteTimer->start(CHECK_REMOTE_PERIOD);
 
     // Creation of children objects
     m_camTrigger = new CamTrigger(this, m_secondScreen);
-    m_camera = new Camera(m_ui->camView, m_cameraDevice);
+    m_camera = new Camera(m_ui->camView, m_cameraDevice, m_resolutionMode, m_upsideDown, m_mirror);
     m_relay = new Relay(m_relayDevice);
 
     // Setting children
@@ -130,6 +130,7 @@ bool PhotoBooth::readingSettingsFile()
     m_cameraDevice = settings.value("deviceNumber").toUInt();
     m_mirror = settings.value("mirror").toBool();
     m_fps = settings.value("fps").toUInt();
+    m_resolutionMode = settings.value("resolutionMode").toUInt();
     settings.endArray();
 
     // read dev section

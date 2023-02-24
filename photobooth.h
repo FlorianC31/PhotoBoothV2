@@ -38,6 +38,7 @@ private:
     CamTrigger* m_camTrigger;
     Photo* m_photo;
     Printer* m_printer;
+    QMovie* m_movie;
 
     enum State{
         SLEEPING,
@@ -61,6 +62,7 @@ private:
     uint m_fps;
     uint m_relayDevice;
     uint m_cameraDevice;
+    uint m_resolutionMode;
 
     QTimer* m_countDownTimer;
     QTimer* m_sleepTimer;

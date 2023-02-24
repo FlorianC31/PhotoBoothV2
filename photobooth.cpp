@@ -12,6 +12,9 @@ PhotoBooth::PhotoBooth(QWidget *parent) :
     m_photo(nullptr),
     m_printer(nullptr),
     m_settingFile("settings.ini"),
+    m_isCameraLoading(true),
+    m_isRelayLoading(true),
+    m_isLoading(false),
     m_countDownTimer(nullptr),
     m_sleepTimer(nullptr),
     m_cameraTimer(nullptr),
@@ -52,7 +55,7 @@ PhotoBooth::PhotoBooth(QWidget *parent) :
     m_cameraTimer = new QTimer(this);
     connect(m_countDownTimer, &QTimer::timeout, this, &PhotoBooth::countDown);
     connect(m_sleepTimer, &QTimer::timeout, this, &PhotoBooth::goToSleep);
-    connect(m_remoteTimer, &QTimer::timeout, this, &PhotoBooth::checkRemote);
+    connect(m_remoteTimer, &QTimer::timeout, this, &PhotoBooth::checkSystems);
     connect(m_cameraTimer, &QTimer::timeout, this, &PhotoBooth::CameraLoop);
     m_remoteTimer->start(CHECK_REMOTE_PERIOD);
 
@@ -63,6 +66,7 @@ PhotoBooth::PhotoBooth(QWidget *parent) :
 
     // Setting children
     settingRelayDevices();
+    connect(this, &PhotoBooth::checkLoopSignal, m_camTrigger, &CamTrigger::checkLoop);
     connect(this, &PhotoBooth::focusSignal, m_camTrigger, &CamTrigger::focus);
     connect(this, &PhotoBooth::triggerSignal, m_camTrigger, &CamTrigger::trigger);
 }
@@ -85,9 +89,22 @@ PhotoBooth::~PhotoBooth()
     delete m_ui;
 }
 
-void PhotoBooth::checkRemote()
+void PhotoBooth::checkSystems()
 {
+    qDebug() << "checkSystems loop";
+
     m_camTrigger->checkLoop();
+
+    qDebug() << "m_isLoading" << (m_isLoading?"True":"False");
+    qDebug() << "m_isCameraLoading" << (m_isCameraLoading?"True":"False");
+    qDebug() << "m_isRelayLoading" << (m_isRelayLoading?"True":"False");
+
+    if(!m_isLoading && (m_isCameraLoading || m_isRelayLoading)) {
+        startLoading();
+    }
+    else if(m_isLoading && !m_isCameraLoading && !m_isRelayLoading){
+        stopLoading();
+    }
 }
 
 void PhotoBooth::CameraLoop()
@@ -200,7 +217,6 @@ void PhotoBooth::takePhoto()
 void PhotoBooth::startLoading()
 {
     qDebug() << "Start Loading";
-    m_ui->loading->show();
     m_ui->veilleButton->hide();
     m_ui->widgetPhoto->hide();
     m_ui->widgetPrint->hide();
@@ -210,8 +226,8 @@ void PhotoBooth::startLoading()
 void PhotoBooth::stopLoading()
 {
     qDebug() << "Stop Loading";
-    //m_ui->compteur->show();
-    //showCam();
+    m_ui->compteur->show();
+    showCam();
 }
 
 void PhotoBooth::showPhoto()
@@ -352,5 +368,6 @@ void PhotoBooth::settingRelayDevices()
     m_pcFan = new RelayDevice(m_relay, m_relaysConfig["pcFan"]);
     m_printerFan = new RelayDevice(m_relay, m_relaysConfig["printerFan"]);
     m_light = new RelayDevice(m_relay, m_relaysConfig["light"]);
+    m_isRelayLoading = false;
 }
 

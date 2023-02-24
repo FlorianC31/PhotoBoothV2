@@ -8,6 +8,8 @@
 #include <QThread>
 #include <QMovie>
 
+#include <atomic>
+
 #include "lib/camera.h"
 #include "lib/camtrigger.h"
 #include "lib/photo.h"
@@ -61,6 +63,10 @@ private:
     uint m_fps;
     uint m_relayDevice;
     uint m_cameraDevice;
+    std::atomic_bool m_isCameraLoading;
+    std::atomic_bool m_isRelayLoading;
+    bool m_isLoading;
+
 
     QTimer* m_countDownTimer;
     QTimer* m_sleepTimer;
@@ -88,24 +94,26 @@ private:
     void takePhoto();
     void treatPhoto();
     void reinitSleep();
+    void startLoading();
+    void stopLoading();
 
     Relay* m_relay;
     RelayDevice* m_pcFan;
     RelayDevice* m_printerFan;
     RelayDevice* m_light;
 
+public:
+    void setIsCameraLoading(bool value) {m_isCameraLoading = value;};
+    void setIsRelayLoading(bool value) {m_isRelayLoading = value;};
+
 private slots:
     void countDown();
     void goToSleep();
-    void checkRemote();
+    void checkSystems();
     void CameraLoop();
 
- public slots:
-    void startLoading();
-    void stopLoading();
-
 signals:
-    void initSignal(bool secondScreen);
+    void checkLoopSignal();
     void focusSignal();
     void triggerSignal();
 };

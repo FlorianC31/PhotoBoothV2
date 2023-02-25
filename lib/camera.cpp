@@ -13,6 +13,9 @@
 #define RATIO_3_2 1.5
 #define MARGIN 1;
 
+#define SLEEP_TIME 100 // Time in ms to wait between 2 tries to get the last photo
+#define TRIES_NUMBER 50 // Number of tries to get the last photo
+
 /**
  * @brief Camera::Camera Class to get frame from camera connected as a webcam on the PC
  * @param camView QLabel used by the UI to display the frames
@@ -52,15 +55,23 @@ Camera::Camera(QLabel* camView, uint camId, uint resolutionMode, bool upsideDown
     qDebug() << "Resolution mode:" << resolutionMode << "- width=" << resTable[resolutionMode][0] << "- height=" << resTable[resolutionMode][1];
 
     m_cropLeft =  round((RATIO_16_9 - RATIO_3_2) * m_resolution[1] / 2) + MARGIN;
-    m_cropWidth = RATIO_3_2 * m_resolution[1] - MARGIN;
+    m_cropWidth = RATIO_3_2 * m_resolution[1] -  2 * MARGIN;
 
     // Create a video capture object using the DirectShow backend
-    m_cap = new cv::VideoCapture(1, cv::CAP_DSHOW);
-    m_cap->open(m_camId);
-    if (!m_cap->isOpened()){
-        qDebug() << "ERROR: Impossible to connect to camera" << m_camId;
-        return;
-    }
+    int nbTries = TRIES_NUMBER;
+    do {
+        nbTries--;
+        Sleep(SLEEP_TIME);
+
+        m_cap = new cv::VideoCapture(1, cv::CAP_DSHOW);
+        m_cap->open(m_camId);
+
+        if (nbTries == 0) {
+            qDebug() << "ERROR: Impossible to connect to camera";
+            return;
+        }
+
+    } while(!m_cap->isOpened());
 
     // Set resolution
     m_cap->set(cv::CAP_PROP_FRAME_WIDTH, m_resolution[0]);

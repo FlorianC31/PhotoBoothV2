@@ -613,6 +613,22 @@ color: rgb(255, 255, 255);</string>
     <bool>true</bool>
    </property>
   </widget>
+  <widget class="QLabel" name="flash">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1920</width>
+     <height>1080</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 rgba(255, 255, 255, 255), stop:1 rgba(255, 255, 255, 255));</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
   <zorder>background</zorder>
   <zorder>loading</zorder>
   <zorder>widgetPhoto</zorder>
@@ -622,6 +638,7 @@ color: rgb(255, 255, 255);</string>
   <zorder>compteur</zorder>
   <zorder>widgetDevelopper</zorder>
   <zorder>veilleButton</zorder>
+  <zorder>flash</zorder>
  </widget>
  <resources/>
  <connections/>

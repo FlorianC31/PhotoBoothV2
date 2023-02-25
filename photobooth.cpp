@@ -3,6 +3,7 @@
 #include "lib/utils.h"
 
 #define CHECK_REMOTE_PERIOD 1000 //ms
+#define FLASH_DURATION 400 //ms
 
 PhotoBooth::PhotoBooth(QWidget *parent) :
     QWidget(parent),
@@ -166,6 +167,8 @@ bool PhotoBooth::readingSettingsFile()
 
 void PhotoBooth::settingDisplay()
 {
+    m_ui->flash->hide();
+
     m_ui->compteur->setText(QString::number(m_printCounter));
     if (!m_modeDev)
         m_ui->warning->hide();
@@ -356,8 +359,10 @@ void PhotoBooth::countDown()
     case 0:
         m_countDownTimer->stop();
         emit triggerSignal();
-        //m_camTrigger->trigger();
-        treatPhoto();
+        m_ui->flash->show();
+        Sleep(FLASH_DURATION);
+        m_ui->flash->hide();
+        showPhoto();
         break;
     }
 }

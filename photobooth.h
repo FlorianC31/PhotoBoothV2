@@ -2,6 +2,8 @@
 #ifndef PhotoBooth_H
 #define PhotoBooth_H
 
+#include <windows.h>
+
 #include <QWidget>
 #include <QtCore>
 #include <QPushButton>

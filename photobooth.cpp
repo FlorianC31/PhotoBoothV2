@@ -15,6 +15,7 @@ PhotoBooth::PhotoBooth(QWidget *parent) :
     m_countDownTimer(nullptr),
     m_sleepTimer(nullptr),
     m_cameraTimer(nullptr),
+    m_lightOn(false),
     m_relay(nullptr),
     m_pcFan(nullptr),
     m_printerFan(nullptr),
@@ -60,6 +61,7 @@ PhotoBooth::PhotoBooth(QWidget *parent) :
     m_camTrigger = new CamTrigger(this, m_secondScreen);
     m_camera = new Camera(m_ui->camView, m_cameraDevice, m_resolutionMode, m_upsideDown, m_mirror);
     m_relay = new Relay(m_relayDevice);
+    m_photo = new Photo(m_photoFolder, m_isoMax, m_addWatermark);
 
     // Setting children
     settingRelayDevices();
@@ -113,6 +115,16 @@ bool PhotoBooth::readingSettingsFile()
     settings.beginReadArray("printer");
     m_printCounter = settings.value("counter").toUInt();
     m_nbPrintMax = settings.value("nbPrintMax").toUInt();
+    settings.endArray();
+
+    // Read photo section
+    settings.beginReadArray("photo");
+    m_isoMax = settings.value("isoMax").toUInt();
+    m_photoFolder = settings.value("photoFolder").toString();
+    if (m_photoFolder == "") {
+        qDebug() << "ERROR: photoFolder path is not setin the settings file.";
+        return false;
+    }
     m_addWatermark = settings.value("addWatermark").toBool();
     settings.endArray();
 
@@ -218,9 +230,26 @@ void PhotoBooth::showPhoto()
     m_ui->veilleButton->hide();
     m_ui->widgetPhoto->hide();
     m_state = DISPLAY_PIC;
+
+    m_photo->getLast(m_lastPhoto);
+
+    if (m_lightOn) {
+        // If the iso of the last photo are higher than max, turn on the light
+        if (m_photo->checkIso()) {
+            m_lightOn = true;
+            m_light->on();
+        }
+    }
+
+    // Resize the photo and display it
+    QPixmap photoToDisplay = m_lastPhoto.scaled(m_ui->viewer->size());
+    m_ui->viewer->setPixmap(photoToDisplay);
+
     m_nbPrint = 1;
     updateNbPrint(0);
     m_ui->widgetPrint->show();
+
+    m_sleepTimer->start(60000);
 }
 
 void PhotoBooth::goToSleep()
@@ -320,7 +349,6 @@ void PhotoBooth::countDown()
     switch (m_count) {
     case 4:
         emit focusSignal();
-        //m_camTrigger->focus();
         break;
     case 2:
         m_ui->lookUp->show();
@@ -334,16 +362,6 @@ void PhotoBooth::countDown()
     }
 }
 
-
-void PhotoBooth::treatPhoto()
-{
-    showPhoto();
-    //m_photo->getLast();
-    //m_photo->addWaterMark();
-    //m_photo->checkIso(m_isoMax);
-    m_ui->widgetPrint->show();
-    m_sleepTimer->start(60000);
-}
 
 void PhotoBooth::settingRelayDevices()
 {

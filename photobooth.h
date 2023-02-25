@@ -59,10 +59,12 @@ private:
     bool m_modeDev;
     bool m_fullScreen;
     bool m_secondScreen;
+    QString m_photoFolder;
     uint m_fps;
     uint m_relayDevice;
     uint m_cameraDevice;
     uint m_resolutionMode;
+    QPixmap m_lastPhoto;
 
     QTimer* m_countDownTimer;
     QTimer* m_sleepTimer;
@@ -74,6 +76,8 @@ private:
     double m_fontSizeRatio;
     QMap<char, uint> m_backgroundColor;
     QMap<QString, uint> m_relaysConfig;
+
+    bool m_lightOn;
 
     bool readingSettingsFile();
     void settingDisplay();
@@ -88,7 +92,6 @@ private:
     void btnDisable(QPushButton* button);
     void print();
     void takePhoto();
-    void treatPhoto();
     void checkIso();
     void reinitSleep();
 

@@ -17,7 +17,7 @@ Photo::Photo(QString photoFolder, uint isoMax, bool addWatermark) :
     m_addWatermark(addWatermark)
 {
     m_folder = QDir(photoFolder);
-    oldPhotoPath = getLastJpg();
+    m_oldPhotoPath = getLastJpg();
 
     if (m_addWatermark) {
         // Load the watermark image into another QPixmap object
@@ -57,9 +57,9 @@ bool Photo::getLast(QPixmap &lastPhoto)
         }
 
         pathToRecentFile = getLastJpg();
-    } while(pathToRecentFile == oldPhotoPath || pathToRecentFile == "");
+    } while(pathToRecentFile == m_oldPhotoPath || pathToRecentFile == "");
 
-    oldPhotoPath = pathToRecentFile;
+    m_oldPhotoPath = pathToRecentFile;
 
     // Get the last photo
     QPixmap newPhoto = QPixmap(pathToRecentFile);

@@ -26,7 +26,7 @@ private:
     QPixmap m_watermarkPng;
     QSize m_resizedPhotoSize;
     QPoint m_watermarkPos;
-    QString oldPhotoPath;
+    QString m_oldPhotoPath;
 };
 
 #endif // PHOTO_H

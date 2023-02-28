@@ -53,9 +53,3 @@ LIBS += -L$$PWD/lib/opencv/x64/mingw/lib/ -llibopencv_videoio470.dll
 
 INCLUDEPATH += $$PWD/lib/opencv/include
 DEPENDPATH += $$PWD/lib/opencv/include
-
-#win32: LIBS += -L$$PWD/../exiv2-0.27.5.3-2019msvc64/lib/ -lexiv2
-LIBS += -L$$PWD/../exiv2-0.27.5.3-2019msvc64/lib/ -lexiv2
-
-INCLUDEPATH += $$PWD/../exiv2-0.27.5.3-2019msvc64/include
-DEPENDPATH += $$PWD/../exiv2-0.27.5.3-2019msvc64/include

@@ -1,6 +1,4 @@
 #include "photo.h"
-#include "exiv2/exif.hpp"
-#include "exiv2/image.hpp"
 
 #include <QDebug>
 
@@ -116,22 +114,5 @@ void Photo::addWatermark(QPixmap &photo)
  */
 bool Photo::checkIso()
 {
-    Exiv2::Image::AutoPtr image = Exiv2::ImageFactory::open(m_oldPhotoPath.toStdString());
-
-    image->readMetadata();
-
-    Exiv2::ExifData& exifData = image->exifData();
-    if (exifData.empty()) {
-        qDebug() << "No EXIF data found in image file:" << m_oldPhotoPath;
-    }
-
-    Exiv2::ExifKey keyIso("Exif.Photo.ISO");
-    Exiv2::ExifData::const_iterator iso = exifData.findKey(keyIso);
-    if (iso == exifData.end()) {
-        qDebug() << "No ISO metadata found in image file:" << m_oldPhotoPath;
-    }
-
-    qDebug() << "Iso =" << iso->value().toString().c_str();
-
     return false;
 }

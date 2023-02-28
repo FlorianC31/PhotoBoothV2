@@ -9,6 +9,7 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    lib/exif.cpp \
     lib/camera.cpp \
     lib/camtrigger.cpp \
     lib/photo.cpp \
@@ -19,6 +20,7 @@ SOURCES += \
     photobooth.cpp
 
 HEADERS += \
+    lib/exif.h \
     lib/camera.h \
     lib/camtrigger.h \
     lib/photo.h \
@@ -45,11 +47,22 @@ DISTFILES += \
     readme.MD \
     settings.ini
 
-# Opencv lib
-LIBS += -L$$PWD/lib/opencv/x64/mingw/lib/ -llibopencv_core470.dll
-LIBS += -L$$PWD/lib/opencv/x64/mingw/lib/ -llibopencv_imgcodecs470.dll
-LIBS += -L$$PWD/lib/opencv/x64/mingw/lib/ -llibopencv_imgproc470.dll
-LIBS += -L$$PWD/lib/opencv/x64/mingw/lib/ -llibopencv_videoio470.dll
+win32-g++ {
+    ## Opencv lib
+    LIBS += -L$$PWD/lib/opencv/x64/mingw/lib/ -llibopencv_core470.dll
+    LIBS += -L$$PWD/lib/opencv/x64/mingw/lib/ -llibopencv_imgcodecs470.dll
+    LIBS += -L$$PWD/lib/opencv/x64/mingw/lib/ -llibopencv_imgproc470.dll
+    LIBS += -L$$PWD/lib/opencv/x64/mingw/lib/ -llibopencv_videoio470.dll
 
-INCLUDEPATH += $$PWD/lib/opencv/include
-DEPENDPATH += $$PWD/lib/opencv/include
+    INCLUDEPATH += $$PWD/lib/opencv/include
+    DEPENDPATH += $$PWD/lib/opencv/include
+}
+
+win32-msvc* {
+
+    win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../../../../../OpenCV/opencv/build/x64/vc16/lib/ -lopencv_world470
+    else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../../../../../OpenCV/opencv/build/x64/vc16/lib/ -lopencv_world470d
+
+    INCLUDEPATH += $$PWD/../../../../../../OpenCV/opencv/sources/include
+    DEPENDPATH += $$PWD/../../../../../../OpenCV/opencv/build/x64/vc16
+}

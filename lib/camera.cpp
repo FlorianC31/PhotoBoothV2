@@ -84,6 +84,8 @@ Camera::Camera(QLabel* camView, uint camId, uint resolutionMode, bool upsideDown
 Camera::~Camera()
 {
     m_isRunning = false;
+    m_cameraThread->quit();
+    m_cameraThread->wait();
     delete m_cameraThread;
     delete m_cap;
 }

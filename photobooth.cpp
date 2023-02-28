@@ -55,7 +55,7 @@ PhotoBooth::PhotoBooth(QWidget *parent) :
     connect(m_sleepTimer, &QTimer::timeout, this, &PhotoBooth::goToSleep);
     connect(m_remoteTimer, &QTimer::timeout, this, &PhotoBooth::checkRemote);
     connect(m_cameraTimer, &QTimer::timeout, this, &PhotoBooth::CameraLoop);
-    //m_remoteTimer->start(CHECK_REMOTE_PERIOD);
+    m_remoteTimer->start(CHECK_REMOTE_PERIOD);
 
     // Creation of children objects
     m_camTrigger = new CamTrigger(this, m_secondScreen);
@@ -80,6 +80,7 @@ PhotoBooth::~PhotoBooth()
     delete m_cameraTimer;
 
     delete m_camera;
+    delete m_photo;
     delete m_relay;
     delete m_pcFan;
     delete m_printerFan;
@@ -221,6 +222,8 @@ void PhotoBooth::startLoading()
 
 void PhotoBooth::stopLoading()
 {
+    QPixmap _;
+    m_photo->getLast(_);
     m_ui->compteur->show();
     showCam();
 }
@@ -233,9 +236,10 @@ void PhotoBooth::showPhoto()
 
     m_photo->getLast(m_lastPhoto);
 
-    if (m_lightOn) {
+    if (!m_lightOn) {
         // If the iso of the last photo are higher than max, turn on the light
         if (m_photo->checkIso()) {
+            qDebug() << "INFO : ISO >" << m_isoMax << "- Turning on light";
             m_lightOn = true;
             m_light->on();
         }
@@ -356,8 +360,8 @@ void PhotoBooth::countDown()
     case 0:
         m_countDownTimer->stop();
         emit triggerSignal();
-        //m_camTrigger->trigger();
-        treatPhoto();
+        m_camTrigger->trigger();
+        showPhoto();
         break;
     }
 }

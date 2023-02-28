@@ -1,4 +1,5 @@
 #include "photo.h"
+#include "exif.h"
 
 #include <QDebug>
 
@@ -65,7 +66,6 @@ bool Photo::getLast(QPixmap &lastPhoto)
     QPixmap newPhoto = QPixmap(pathToRecentFile);
 
     // Resize the photo
-    qDebug() << "Resizing the photo";
     newPhoto = newPhoto.scaled(m_resizedPhotoSize);
 
     if (m_addWatermark) {
@@ -114,5 +114,31 @@ void Photo::addWatermark(QPixmap &photo)
  */
 bool Photo::checkIso()
 {
-    return false;
+    // Read the JPEG file into a buffer
+    FILE *fp = std::fopen(m_oldPhotoPath.toStdString().c_str(), "rb");
+    if (!fp) {
+      qDebug() << "ERROR: CheckISO - Can't open file.";
+      return false;
+    }
+    fseek(fp, 0, SEEK_END);
+    unsigned long fsize = ftell(fp);
+    rewind(fp);
+    unsigned char *buf = new unsigned char[fsize];
+    if (fread(buf, 1, fsize, fp) != fsize) {
+      qDebug() << "ERROR: CheckISO - Can't read file.";
+      delete[] buf;
+      return false;
+    }
+    fclose(fp);
+
+    // Parse EXIF
+    easyexif::EXIFInfo result;
+    int code = result.parseFrom(buf, fsize);
+    delete[] buf;
+    if (code) {
+      qDebug() << "ERROR: CheckISO - Error parsing EXIF: code" << code;
+      return -3;
+    }
+
+    return result.ISOSpeedRatings > m_isoMax;
 }

@@ -62,6 +62,7 @@ PhotoBooth::PhotoBooth(QWidget *parent) :
     m_camera = new Camera(m_ui->camView, m_cameraDevice, m_resolutionMode, m_upsideDown, m_mirror);
     m_relay = new Relay(m_relayDevice);
     m_photo = new Photo(m_photoFolder, m_isoMax, m_addWatermark);
+    m_printer = new Printer(m_upsideDown);
 
     // Setting children
     settingRelayDevices();
@@ -81,6 +82,7 @@ PhotoBooth::~PhotoBooth()
 
     delete m_camera;
     delete m_photo;
+    delete m_printer;
     delete m_relay;
     delete m_pcFan;
     delete m_printerFan;
@@ -327,7 +329,7 @@ void PhotoBooth::print()
         return;
 
     // send photo to printer
-    m_printer->print(m_nbPrint);
+    m_printer->print(m_lastPhoto, m_nbPrint);
 
     // update print counter
     m_printCounter -= m_nbPrint;

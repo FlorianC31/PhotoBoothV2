@@ -74,7 +74,7 @@ private:
 
     QString m_font;
     double m_fontSizeRatio;
-    QMap<char, uint> m_backgroundColor;
+    QString m_styleSheet;
     QMap<QString, uint> m_relaysConfig;
 
     bool m_lightOn;
@@ -87,6 +87,9 @@ private:
     void showPhoto();
     void exit();
 
+    bool generateStyleSheet(QString backGroundColor1, QString backGroundColor2, QString fontColor);
+    void updateFont(QLabel* label);
+    void updateFont(QPushButton* button);
     void updateNbPrint(int increment);
     void btnActivate(QPushButton* button);
     void btnDisable(QPushButton* button);

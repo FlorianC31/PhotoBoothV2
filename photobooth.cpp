@@ -160,12 +160,44 @@ bool PhotoBooth::readingSettingsFile()
     m_font = settings.value("font").toString();
     m_fontSizeRatio = settings.value("fontSizeRatio").toDouble();
 
-    if (!transformColor(settings.value("backgroundColor").toString(), m_backgroundColor))
-        return false;
+    QString backgroundColor1 = settings.value("backgroundColor1").toString();
+    QString backgroundColor2 = settings.value("backgroundColor2").toString();
+    QString fontColor = settings.value("fontColor").toString();
     settings.endArray();
+
+    if (!generateStyleSheet(backgroundColor1, backgroundColor2, fontColor))
+        return false;
 
     return true;
 }
+
+
+bool PhotoBooth::generateStyleSheet(QString backGroundColor1, QString backGroundColor2, QString fontColor)
+{
+    QMap<char, uint> colorRGB;
+
+    if (!transformColor(backGroundColor1, colorRGB))
+        return false;
+    m_styleSheet = "background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 rgba(";
+    m_styleSheet += QString::number(colorRGB['R']) + ", ";
+    m_styleSheet += QString::number(colorRGB['G']) + ", ";
+    m_styleSheet += QString::number(colorRGB['B']) + ", 255), stop:1 rgba(";
+
+    if (!transformColor(backGroundColor2, colorRGB))
+        return false;
+    m_styleSheet += QString::number(colorRGB['R']) + ", ";
+    m_styleSheet += QString::number(colorRGB['G']) + ", ";
+    m_styleSheet += QString::number(colorRGB['B']) + ", 255));\ncolor: rgb(";
+
+    if (!transformColor(fontColor, colorRGB))
+        return false;
+    m_styleSheet += QString::number(colorRGB['R']) + ", ";
+    m_styleSheet += QString::number(colorRGB['G']) + ", ";
+    m_styleSheet += QString::number(colorRGB['B']) + ");";
+
+    return true;
+}
+
 
 void PhotoBooth::settingDisplay()
 {
@@ -178,6 +210,35 @@ void PhotoBooth::settingDisplay()
 
     if (m_fullScreen)
         showFullScreen();
+
+    updateFont(m_ui->compteur);
+    updateFont(m_ui->countdown);
+    updateFont(m_ui->warning);
+    updateFont(m_ui->lookUp);
+    updateFont(m_ui->nbPrintLabel);
+    updateFont(m_ui->veilleButton);
+    updateFont(m_ui->buttonIncrease);
+    updateFont(m_ui->buttonDecrease);
+
+    m_ui->background->setStyleSheet(m_styleSheet);
+    m_ui->veilleButton->setStyleSheet(m_styleSheet);
+}
+
+void PhotoBooth::updateFont(QLabel* label)
+{
+    QFont font = label->font();
+    font.setFamily(m_font);
+    font.setPointSize(font.pointSize() / m_fontSizeRatio);
+    label->setFont(font);
+}
+
+
+void PhotoBooth::updateFont(QPushButton* button)
+{
+    QFont font = button->font();
+    font.setFamily(m_font);
+    font.setPointSize(font.pointSize() / m_fontSizeRatio);
+    button->setFont(font);
 }
 
 void PhotoBooth::showCam()

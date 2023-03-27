@@ -11,13 +11,14 @@
 class Photo
 {
 public:
-    Photo(QString photoFolder, uint isoMax, bool m_addWatermark);
+    Photo(QString photoFolder, uint isoMax, bool m_addWatermark, QSize viewerSize);
     ~Photo();
-    bool getLast(QPixmap &lastPhoto);
+    bool getLast(QPixmap &lastPhoto, QPixmap &lastPhoto2Print);
+    bool loadLast();
     bool checkIso();
 
 private:
-    void addWatermark(QPixmap &photo);
+    QPixmap pasteWatermark(QPixmap &photo);
     QString getLastJpg();
 
     uint m_isoMax;
@@ -26,7 +27,8 @@ private:
     QPixmap m_watermarkPng;
     QSize m_resizedPhotoSize;
     QPoint m_watermarkPos;
-    QString m_oldPhotoPath;
+    QString m_pathToRecentFile;
+    QSize m_viewerSize;
 };
 
 #endif // PHOTO_H

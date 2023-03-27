@@ -65,6 +65,7 @@ private:
     uint m_cameraDevice;
     uint m_resolutionMode;
     QPixmap m_lastPhoto;
+    QPixmap m_lastPhoto2Print;
 
     QTimer* m_countDownTimer;
     QTimer* m_sleepTimer;

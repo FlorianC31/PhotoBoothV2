@@ -4,6 +4,10 @@
 
 #define CHECK_REMOTE_PERIOD 1000 //ms
 
+/**
+ * @brief PhotoBooth::PhotoBooth Main photobooth window class
+ * @param parent parent QApplication
+ */
 PhotoBooth::PhotoBooth(QWidget *parent) :
     QWidget(parent),
     m_ui(new Ui::PhotoBooth),
@@ -61,7 +65,7 @@ PhotoBooth::PhotoBooth(QWidget *parent) :
     m_camTrigger = new CamTrigger(this, m_secondScreen);
     m_camera = new Camera(m_ui->camView, m_cameraDevice, m_resolutionMode, m_upsideDown, m_mirror);
     m_relay = new Relay(m_relayDevice);
-    m_photo = new Photo(m_photoFolder, m_isoMax, m_addWatermark);
+    m_photo = new Photo(m_photoFolder, m_isoMax, m_addWatermark, m_ui->viewer->size());
     m_printer = new Printer(m_upsideDown);
 
     // Setting children
@@ -70,6 +74,10 @@ PhotoBooth::PhotoBooth(QWidget *parent) :
     connect(this, &PhotoBooth::triggerSignal, m_camTrigger, &CamTrigger::trigger);
 }
 
+
+/**
+ * @brief PhotoBooth::~PhotoBooth PhotoBooth destuctor
+ */
 PhotoBooth::~PhotoBooth()
 {
     delete m_movie;
@@ -90,15 +98,24 @@ PhotoBooth::~PhotoBooth()
     delete m_ui;
 }
 
+
+/**
+ * @brief PhotoBooth::checkRemote timer slot to periodically check if the remote is still open
+ */
 void PhotoBooth::checkRemote()
 {
     m_camTrigger->checkLoop();
 }
 
+
+/**
+ * @brief PhotoBooth::CameraLoop timer slot to periodically get the camera frames
+ */
 void PhotoBooth::CameraLoop()
 {
     m_camera->loop();
 }
+
 
 /**
  * @brief PhotoBooth::readingSettingsFile Read the settings.ini file to get all the user settings
@@ -172,6 +189,13 @@ bool PhotoBooth::readingSettingsFile()
 }
 
 
+/**
+ * @brief PhotoBooth::generateStyleSheet generate styleSheet from colors
+ * @param backGroundColor1 Color1 for background shading color
+ * @param backGroundColor2 Color2 for background shading color
+ * @param fontColor color for the text
+ * @return true if the input color are correct
+ */
 bool PhotoBooth::generateStyleSheet(QString backGroundColor1, QString backGroundColor2, QString fontColor)
 {
     QMap<char, uint> colorRGB;
@@ -199,6 +223,9 @@ bool PhotoBooth::generateStyleSheet(QString backGroundColor1, QString backGround
 }
 
 
+/**
+ * @brief PhotoBooth::settingDisplay Setting up the display
+ */
 void PhotoBooth::settingDisplay()
 {
     m_ui->compteur->setText(QString::number(m_printCounter));
@@ -224,6 +251,11 @@ void PhotoBooth::settingDisplay()
     m_ui->veilleButton->setStyleSheet(m_styleSheet);
 }
 
+
+/**
+ * @brief PhotoBooth::updateFont update the font familly and size in a QLabel
+ * @param label label where update the font
+ */
 void PhotoBooth::updateFont(QLabel* label)
 {
     QFont font = label->font();
@@ -233,6 +265,10 @@ void PhotoBooth::updateFont(QLabel* label)
 }
 
 
+/**
+ * @brief PhotoBooth::updateFont update the font familly and size in a QPushButton
+ * @param button button where update the font
+ */
 void PhotoBooth::updateFont(QPushButton* button)
 {
     QFont font = button->font();
@@ -241,6 +277,10 @@ void PhotoBooth::updateFont(QPushButton* button)
     button->setFont(font);
 }
 
+
+/**
+ * @brief PhotoBooth::showCam show the camera in the UI
+ */
 void PhotoBooth::showCam()
 {
     reinitSleep();
@@ -258,6 +298,10 @@ void PhotoBooth::showCam()
     m_state = SHOWING_CAM;
 }
 
+
+/**
+ * @brief PhotoBooth::takePhoto take the photo
+ */
 void PhotoBooth::takePhoto()
 {
     m_sleepTimer->stop();
@@ -274,6 +318,10 @@ void PhotoBooth::takePhoto()
 
 }
 
+
+/**
+ * @brief PhotoBooth::startLoading start the loading of the photobooth
+ */
 void PhotoBooth::startLoading()
 {
     m_ui->loading->show();
@@ -283,21 +331,28 @@ void PhotoBooth::startLoading()
     m_ui->compteur->hide();
 }
 
+
+/**
+ * @brief PhotoBooth::stopLoading stop the loading of the photobooth
+ */
 void PhotoBooth::stopLoading()
 {
-    QPixmap _;
-    m_photo->getLast(_);
+    m_photo->loadLast();
     m_ui->compteur->show();
     showCam();
 }
 
+
+/**
+ * @brief PhotoBooth::showPhoto show the last photo in the UI
+ */
 void PhotoBooth::showPhoto()
 {
     m_ui->veilleButton->hide();
     m_ui->widgetPhoto->hide();
     m_state = DISPLAY_PIC;
 
-    m_photo->getLast(m_lastPhoto);
+    m_photo->getLast(m_lastPhoto, m_lastPhoto2Print);
 
     if (!m_lightOn) {
         // If the iso of the last photo are higher than max, turn on the light
@@ -309,8 +364,7 @@ void PhotoBooth::showPhoto()
     }
 
     // Resize the photo and display it
-    QPixmap photoToDisplay = m_lastPhoto.scaled(m_ui->viewer->size());
-    m_ui->viewer->setPixmap(photoToDisplay);
+    m_ui->viewer->setPixmap(m_lastPhoto);
 
     m_nbPrint = 1;
     updateNbPrint(0);
@@ -319,23 +373,40 @@ void PhotoBooth::showPhoto()
     m_sleepTimer->start(60000);
 }
 
+
+/**
+ * @brief PhotoBooth::goToSleep enter in sleep mode
+ */
 void PhotoBooth::goToSleep()
 {
     m_sleepTimer->stop();
     m_ui->veilleButton->show();
 }
 
+
+/**
+ * @brief PhotoBooth::exit close the application
+ */
 void PhotoBooth::exit()
 {
     this->close();
 }
 
+
+/**
+ * @brief PhotoBooth::reinitSleep reinitalize the "GoToSleep" timer
+ */
 void PhotoBooth::reinitSleep()
 {
     m_sleepTimer->stop();
     m_sleepTimer->start(60000);
 }
 
+
+/**
+ * @brief PhotoBooth::updateNbPrint slot called by the de/increase printer buttons to adjust the number of copies to print
+ * @param increment +1 or -1 to increase or decrease the number of copies to print
+ */
 void PhotoBooth::updateNbPrint(int increment)
 {
     reinitSleep();
@@ -371,16 +442,30 @@ void PhotoBooth::updateNbPrint(int increment)
 
 }
 
+
+/**
+ * @brief PhotoBooth::btnActivate activate a button in the UI
+ * @param button button to activate
+ */
 void PhotoBooth::btnActivate(QPushButton* button)
 {
     button->setStyleSheet("background-color: transparent;\ncolor: rgb(255, 255, 255);");
 }
 
+
+/**
+ * @brief PhotoBooth::btnDisable disable a button in the UI
+ * @param button button to disable
+ */
 void PhotoBooth::btnDisable(QPushButton* button)
 {
     button->setStyleSheet("background-color: transparent;\ncolor: rgb(127, 127, 127);");
 }
 
+
+/**
+ * @brief PhotoBooth::print print the last photo
+ */
 void PhotoBooth::print()
 {
     reinitSleep();
@@ -390,7 +475,7 @@ void PhotoBooth::print()
         return;
 
     // send photo to printer
-    m_printer->print(m_lastPhoto, m_nbPrint);
+    m_printer->print(m_lastPhoto2Print, m_nbPrint);
 
     // update print counter
     m_printCounter -= m_nbPrint;
@@ -408,6 +493,9 @@ void PhotoBooth::print()
 }
 
 
+/**
+ * @brief PhotoBooth::countDown slot periodically called by the countdown timer
+ */
 void PhotoBooth::countDown()
 {
     m_count -= 1;
@@ -430,6 +518,9 @@ void PhotoBooth::countDown()
 }
 
 
+/**
+ * @brief PhotoBooth::settingRelayDevices initialize the relay devices
+ */
 void PhotoBooth::settingRelayDevices()
 {
     m_relay = new Relay(m_relayDevice);
@@ -437,4 +528,3 @@ void PhotoBooth::settingRelayDevices()
     m_printerFan = new RelayDevice(m_relay, m_relaysConfig["printerFan"]);
     m_light = new RelayDevice(m_relay, m_relaysConfig["light"]);
 }
-

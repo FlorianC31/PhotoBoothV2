@@ -13,12 +13,13 @@
 #define TRIES_NUMBER 50 // Number of tries to get the last photo
 
 
-Photo::Photo(QString photoFolder, uint isoMax, bool addWatermark) :
+Photo::Photo(QString photoFolder, uint isoMax, bool addWatermark, QSize viewerSize) :
     m_isoMax(isoMax),
-    m_addWatermark(addWatermark)
+    m_addWatermark(addWatermark),
+    m_viewerSize(viewerSize)
 {
     m_folder = QDir(photoFolder);
-    m_oldPhotoPath = getLastJpg();
+    m_pathToRecentFile = getLastJpg();
 
     if (m_addWatermark) {
         // Load the watermark image into another QPixmap object
@@ -38,15 +39,11 @@ Photo::~Photo()
 {
 }
 
-/**
- * @brief Photo::getLast get the last photo from the photo folder
- * @param lastPhoto reference to the destination photo QPixmap
- * @return true the last photo has been loaded and false if no new photo have been detected after 50 tries of 100ms
- */
-bool Photo::getLast(QPixmap &lastPhoto)
+bool Photo::loadLast()
 {
-    QString pathToRecentFile = "";
     int nbTries = TRIES_NUMBER;
+
+    QString oldPhotoPath = m_pathToRecentFile;
 
     do {
         nbTries--;
@@ -57,23 +54,36 @@ bool Photo::getLast(QPixmap &lastPhoto)
             return false;
         }
 
-        pathToRecentFile = getLastJpg();
-    } while(pathToRecentFile == m_oldPhotoPath || pathToRecentFile == "");
+        m_pathToRecentFile = getLastJpg();
+    } while(m_pathToRecentFile == oldPhotoPath || m_pathToRecentFile == "");
 
-    m_oldPhotoPath = pathToRecentFile;
+    return true;
+}
+
+
+/**
+ * @brief Photo::getLast get the last photo from the photo folder
+ * @param lastPhoto reference to the destination photo QPixmap for display
+ * @param lastPhoto2Print reference to the destination photo QPixmap for printing
+ * @return true if the last photo has been loaded and false if no new photo have been detected after 50 tries of 100ms
+ */
+bool Photo::getLast(QPixmap &lastPhoto, QPixmap &lastPhoto2Print)
+{
+    if (!loadLast())
+        return false;
 
     // Get the last photo
-    QPixmap newPhoto = QPixmap(pathToRecentFile);
+    QPixmap newPhoto = QPixmap(m_pathToRecentFile);
 
     // Resize the photo
-    newPhoto = newPhoto.scaled(m_resizedPhotoSize);
+    lastPhoto2Print = newPhoto.scaled(m_resizedPhotoSize);
 
     if (m_addWatermark) {
-        addWatermark(lastPhoto);
+        lastPhoto2Print = pasteWatermark(lastPhoto2Print);
     }
 
     // Return the final photo
-    lastPhoto = newPhoto;
+    lastPhoto = newPhoto.scaled(m_viewerSize);
     return true;
 }
 
@@ -97,14 +107,19 @@ QString Photo::getLastJpg()
  * @brief Photo::addWatermark add the watermark on the photo
  * @param photo reference to the photo where the watermak has to be added
  */
-void Photo::addWatermark(QPixmap &photo)
+QPixmap Photo::pasteWatermark(QPixmap &photo)
 {
+    QPixmap result(photo.width(), photo.height());
+    result.fill(Qt::transparent); // force alpha channel
+
     // Create a QPainter object to draw on the image
-    QPainter painter(&photo);
+    QPainter painter(&result);
 
     // Draw the watermark image on the original image
+    painter.drawPixmap(0, 0, photo);
     painter.drawPixmap(m_watermarkPos, m_watermarkPng);
     painter.end();
+    return result;
 }
 
 
@@ -115,7 +130,7 @@ void Photo::addWatermark(QPixmap &photo)
 bool Photo::checkIso()
 {
     // Read the JPEG file into a buffer
-    FILE *fp = std::fopen(m_oldPhotoPath.toStdString().c_str(), "rb");
+    FILE *fp = std::fopen(m_pathToRecentFile.toStdString().c_str(), "rb");
     if (!fp) {
       qDebug() << "ERROR: CheckISO - Can't open file.";
       return false;

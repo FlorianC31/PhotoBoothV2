@@ -248,6 +248,8 @@ bool PhotoBooth::generateStyleSheet(QString backGroundColor1, QString backGround
  */
 void PhotoBooth::settingDisplay()
 {
+    m_ui->flash->hide();
+
     m_ui->compteur->setText(QString::number(m_printCounter));
     if (!m_modeDev)
         m_ui->warning->hide();
@@ -547,4 +549,14 @@ void PhotoBooth::settingRelayDevices()
     m_pcFan = new RelayDevice(m_relay, m_relaysConfig["pcFan"]);
     m_printerFan = new RelayDevice(m_relay, m_relaysConfig["printerFan"]);
     m_light = new RelayDevice(m_relay, m_relaysConfig["light"]);
+}
+
+void PhotoBooth::showFlash(bool show)
+{
+    if(show){
+        m_ui->flash->show();
+    }
+    else{
+        m_ui->flash->hide();
+    }
 }

@@ -31,6 +31,7 @@ public:
     ~PhotoBooth();
     void startLoading();
     void stopLoading();
+    void showFlash(bool show);
 
 private:
     Ui::PhotoBooth* m_ui;

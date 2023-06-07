@@ -66,7 +66,9 @@ void CamTrigger::trigger()
         move();
     }
     pressKey(AND);
+    m_photoBooth->showFlash(true);
     Sleep(800);
+    m_photoBooth->showFlash(false);
     releaseKey(AND);
     if (!m_secondScreen) {
         move(true);

@@ -103,6 +103,11 @@ void Camera::loop()
     cv::Mat frame;
     (*m_cap) >> frame;
 
+    if(frame.size().height == 0 || frame.size().width == 0) {
+        qDebug() << "ERROR: no frame captured on the camera";
+        return;
+    }
+
     // Mirror flip
     if (m_mirror) {
         cv::flip(frame, frame, 1);

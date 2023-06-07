@@ -43,14 +43,19 @@ PhotoBooth::PhotoBooth(QWidget *parent) :
     m_movie->start();
 
     // Read the settings file
+    qDebug() << "READING SETTINGS FILE";
     if (!readingSettingsFile()) {
         this->close();
     }
+    qDebug() << " -> Done";
 
     // Setting display
+    qDebug() << "SETTING DISPLAY";
     settingDisplay();
+    qDebug() << " -> Done";
 
     // Creation of all timers
+    qDebug() << "CREATION OF TIMERS";
     m_countDownTimer = new QTimer(this);
     m_sleepTimer = new QTimer(this);
     m_remoteTimer = new QTimer(this);
@@ -60,18 +65,33 @@ PhotoBooth::PhotoBooth(QWidget *parent) :
     connect(m_remoteTimer, &QTimer::timeout, this, &PhotoBooth::checkRemote);
     connect(m_cameraTimer, &QTimer::timeout, this, &PhotoBooth::CameraLoop);
     m_remoteTimer->start(CHECK_REMOTE_PERIOD);
+    qDebug() << " -> Done";
 
     // Creation of children objects
+    qDebug() << "CREATION OF CamTrigger";
     m_camTrigger = new CamTrigger(this, m_secondScreen);
+    qDebug() << " -> Done";
+    qDebug() << "CREATION OF Camera";
     m_camera = new Camera(m_ui->camView, m_cameraDevice, m_resolutionMode, m_upsideDown, m_mirror);
+    qDebug() << " -> Done";
+    qDebug() << "CREATION OF Relay";
     m_relay = new Relay(m_relayDevice);
+    qDebug() << " -> Done";
+    qDebug() << "CREATION OF Photo";
     m_photo = new Photo(m_photoFolder, m_isoMax, m_addWatermark, m_ui->viewer->size());
+    qDebug() << " -> Done";
+    qDebug() << "CREATION OF Printer";
     m_printer = new Printer(m_upsideDown);
+    qDebug() << " -> Done";
 
-    // Setting children
+    // Setting children    
+    qDebug() << "SETTING CHILDREN OBJECT";
     settingRelayDevices();
     connect(this, &PhotoBooth::focusSignal, m_camTrigger, &CamTrigger::focus);
     connect(this, &PhotoBooth::triggerSignal, m_camTrigger, &CamTrigger::trigger);
+    qDebug() << " -> Done";
+
+    qDebug() << "END OF INIT";
 }
 
 

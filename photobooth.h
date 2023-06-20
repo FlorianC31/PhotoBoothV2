@@ -5,7 +5,6 @@
 #include <QWidget>
 #include <QtCore>
 #include <QPushButton>
-#include <QThread>
 #include <QMovie>
 
 #include "lib/camera.h"
@@ -72,6 +71,8 @@ private:
     QTimer* m_sleepTimer;
     QTimer* m_remoteTimer;
     QTimer* m_cameraTimer;
+    QTimer* m_photoTimer;
+    QTimer* m_loadingTimer;
     int m_count;
 
     QString m_font;
@@ -109,7 +110,8 @@ private slots:
     void countDown();
     void goToSleep();
     void checkRemote();
-    void CameraLoop();
+    void cameraLoop();
+    void loadPhoto();
 
 signals:
     void initSignal(bool secondScreen);

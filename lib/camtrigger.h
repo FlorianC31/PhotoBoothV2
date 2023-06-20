@@ -48,6 +48,8 @@ private:
     int m_initXPos;
     bool m_secondScreen;
     int m_tempo;
+    QTimer* m_triggerTimer;
+    QTimer* m_focusTimer;
 
     bool isPreRemote() {return checkSize(930, 376);};
     bool isWarningMsg() {return checkSize(427, 159);};
@@ -64,7 +66,7 @@ private:
     void hideLiveView();
     void okDisconnect();
     void closeLiveView();
-    void click(int x, int y, bool doubleClick);
+    void click(int x, int y);
     void printSize();
     void show() {activate();};
     void pressKey(KEY key) {keyboard(key, 0);};
@@ -79,11 +81,14 @@ private:
     Point getPos();
     bool checkSize(int w, int h);
 
-
 public slots:
     void focus();
     void trigger();
     void checkLoop();
+
+private slots:
+    void releaseFocus();
+    void releaseTrigger();
 };
 
 #endif // CAMTRIGGER_H

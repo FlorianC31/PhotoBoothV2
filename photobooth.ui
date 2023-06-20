@@ -636,9 +636,9 @@ color: rgb(255, 255, 255);</string>
   <zorder>logo1</zorder>
   <zorder>logo2</zorder>
   <zorder>compteur</zorder>
-  <zorder>widgetDevelopper</zorder>
   <zorder>veilleButton</zorder>
   <zorder>flash</zorder>
+  <zorder>widgetDevelopper</zorder>
  </widget>
  <resources/>
  <connections/>

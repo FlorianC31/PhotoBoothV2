@@ -18,7 +18,10 @@ PhotoBooth::PhotoBooth(QWidget *parent) :
     m_settingFile("settings.ini"),
     m_countDownTimer(nullptr),
     m_sleepTimer(nullptr),
+    m_remoteTimer(nullptr),
     m_cameraTimer(nullptr),
+    m_photoTimer(nullptr),
+    m_loadingTimer(nullptr),
     m_lightOn(false),
     m_relay(nullptr),
     m_pcFan(nullptr),
@@ -60,10 +63,13 @@ PhotoBooth::PhotoBooth(QWidget *parent) :
     m_sleepTimer = new QTimer(this);
     m_remoteTimer = new QTimer(this);
     m_cameraTimer = new QTimer(this);
+    m_photoTimer = new QTimer(this);
     connect(m_countDownTimer, &QTimer::timeout, this, &PhotoBooth::countDown);
     connect(m_sleepTimer, &QTimer::timeout, this, &PhotoBooth::goToSleep);
     connect(m_remoteTimer, &QTimer::timeout, this, &PhotoBooth::checkRemote);
-    connect(m_cameraTimer, &QTimer::timeout, this, &PhotoBooth::CameraLoop);
+    connect(m_cameraTimer, &QTimer::timeout, this, &PhotoBooth::cameraLoop);
+    connect(m_photoTimer, &QTimer::timeout, this, &PhotoBooth::loadPhoto);
+    //connect(m_loadingTimer, &QTimer::timeout, this, &PhotoBooth::);
     m_remoteTimer->start(CHECK_REMOTE_PERIOD);
     qDebug() << " -> Done";
 
@@ -107,6 +113,8 @@ PhotoBooth::~PhotoBooth()
     delete m_sleepTimer;
     delete m_remoteTimer;
     delete m_cameraTimer;
+    delete m_photoTimer;
+    delete m_loadingTimer;
 
     delete m_camera;
     delete m_photo;
@@ -129,11 +137,23 @@ void PhotoBooth::checkRemote()
 
 
 /**
- * @brief PhotoBooth::CameraLoop timer slot to periodically get the camera frames
+ * @brief PhotoBooth::cameraLoop timer slot to periodically get the camera frames
  */
-void PhotoBooth::CameraLoop()
+void PhotoBooth::cameraLoop()
 {
     m_camera->loop();
+}
+
+
+/**
+ * @brief PhotoBooth::loadPhoto timer slot to periodically check if the new photo is ready
+ */
+void PhotoBooth::loadPhoto()
+{
+    if(m_photo->isThereNew()) {
+        m_photoTimer->stop();
+        showPhoto();
+    }
 }
 
 
@@ -307,6 +327,8 @@ void PhotoBooth::showCam()
 {
     reinitSleep();
 
+    m_remoteTimer->start(CHECK_REMOTE_PERIOD);
+
     m_ui->lookUp->hide();
     m_ui->countdown->hide();
     m_ui->buttonPhoto->show();
@@ -332,9 +354,12 @@ void PhotoBooth::takePhoto()
     m_ui->lookUp->hide();
 
     // Countdown initialisation
-    m_count = 6;
-    m_countDownTimer->start(1000);
-    m_ui->countdown->setText(QString::number(m_count));
+    m_count = 60;
+    m_sleepTimer->stop();
+    m_remoteTimer->stop();
+    m_countDownTimer->start(100);
+
+    m_ui->countdown->setText(QString::number(ceil(0.1*m_count)));
     m_ui->countdown->show();
     m_ui->buttonPhoto->hide();
 
@@ -359,7 +384,6 @@ void PhotoBooth::startLoading()
  */
 void PhotoBooth::stopLoading()
 {
-    m_photo->loadLast();
     m_ui->compteur->show();
     showCam();
 }
@@ -391,6 +415,7 @@ void PhotoBooth::showPhoto()
     m_nbPrint = 1;
     updateNbPrint(0);
     m_ui->widgetPrint->show();
+    m_ui->loading->hide();
 
     m_sleepTimer->start(60000);
 }
@@ -521,20 +546,28 @@ void PhotoBooth::print()
 void PhotoBooth::countDown()
 {
     m_count -= 1;
-    m_ui->countdown->setText(QString::number(m_count));
+    if (m_count>0) {
+        m_ui->countdown->setText(QString::number(ceil(0.1*m_count)));
+    }
 
     switch (m_count) {
-    case 4:
+    case 40:
         emit focusSignal();
         break;
-    case 2:
+    case 20:
         m_ui->lookUp->show();
         break;
     case 0:
-        m_countDownTimer->stop();
+        m_ui->flash->show();
         emit triggerSignal();
-        m_camTrigger->trigger();
-        showPhoto();
+        break;
+    case -4:
+        startLoading();
+        m_ui->flash->hide();
+        break;
+    case -8:
+        m_countDownTimer->stop();
+        m_photoTimer->start(100);
         break;
     }
 }

@@ -13,8 +13,8 @@ class Photo
 public:
     Photo(QString photoFolder, uint isoMax, bool m_addWatermark, QSize viewerSize);
     ~Photo();
-    bool getLast(QPixmap &lastPhoto, QPixmap &lastPhoto2Print);
-    bool loadLast();
+    void getLast(QPixmap &lastPhoto, QPixmap &lastPhoto2Print);
+    bool isThereNew();
     bool checkIso();
 
 private:

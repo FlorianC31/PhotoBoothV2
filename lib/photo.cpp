@@ -39,13 +39,14 @@ Photo::~Photo()
 {
 }
 
-bool Photo::loadLast()
+bool Photo::isThereNew()
 {
-    int nbTries = TRIES_NUMBER;
+    //int nbTries = TRIES_NUMBER;
 
     QString oldPhotoPath = m_pathToRecentFile;
+    m_pathToRecentFile = getLastJpg();
 
-    do {
+    /*do {
         nbTries--;
         Sleep(SLEEP_TIME);
 
@@ -55,8 +56,11 @@ bool Photo::loadLast()
         }
 
         m_pathToRecentFile = getLastJpg();
-    } while(m_pathToRecentFile == oldPhotoPath || m_pathToRecentFile == "");
+    } while(m_pathToRecentFile == oldPhotoPath || m_pathToRecentFile == "");*/
 
+    if (m_pathToRecentFile == oldPhotoPath || m_pathToRecentFile == "") {
+        return false;
+    }
     return true;
 }
 
@@ -65,13 +69,9 @@ bool Photo::loadLast()
  * @brief Photo::getLast get the last photo from the photo folder
  * @param lastPhoto reference to the destination photo QPixmap for display
  * @param lastPhoto2Print reference to the destination photo QPixmap for printing
- * @return true if the last photo has been loaded and false if no new photo have been detected after 50 tries of 100ms
  */
-bool Photo::getLast(QPixmap &lastPhoto, QPixmap &lastPhoto2Print)
+void Photo::getLast(QPixmap &lastPhoto, QPixmap &lastPhoto2Print)
 {
-    if (!loadLast())
-        return false;
-
     // Get the last photo
     QPixmap newPhoto = QPixmap(m_pathToRecentFile);
 
@@ -84,7 +84,6 @@ bool Photo::getLast(QPixmap &lastPhoto, QPixmap &lastPhoto2Print)
 
     // Return the final photo
     lastPhoto = newPhoto.scaled(m_viewerSize);
-    return true;
 }
 
 /**

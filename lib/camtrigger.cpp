@@ -15,9 +15,12 @@
 
 #define MOVE_DISTANCE 2000 // px
 
+#define FOCUS_TIME 200
+#define TRIGGER_TIME 800
+
+
 CamTrigger::CamTrigger(PhotoBooth* photoBooth, bool secondScreen) :
     m_photoBooth(photoBooth),
-    m_triggerThread(nullptr),
     m_state(INIT),
     m_title("Remote"),
     m_initXPos(500),
@@ -28,6 +31,10 @@ CamTrigger::CamTrigger(PhotoBooth* photoBooth, bool secondScreen) :
     m_triggerThread->start();
     this->moveToThread(m_triggerThread);
 
+    m_triggerTimer = new QTimer(this);
+    connect(m_triggerTimer, &QTimer::timeout, this, &CamTrigger::releaseTrigger);
+    m_focusTimer = new QTimer(this);
+    connect(m_focusTimer, &QTimer::timeout, this, &CamTrigger::releaseFocus);
 }
 
 CamTrigger::~CamTrigger()
@@ -42,15 +49,17 @@ void CamTrigger::focus()
     RECT windowRect;
     GetWindowRect(m_handle, &windowRect);
     m_initXPos = windowRect.left;
-
     if (!m_secondScreen) {
         move();
     }
-
     pressKey(G);
-    Sleep(200);
-    releaseKey(G);
+    m_focusTimer->start(FOCUS_TIME);
+}
 
+void CamTrigger::releaseFocus()
+{
+    m_focusTimer->stop();
+    releaseKey(G);
     if (!m_secondScreen) {
         move(true);
     }
@@ -61,18 +70,22 @@ void CamTrigger::trigger()
     RECT windowRect;
     GetWindowRect(m_handle, &windowRect);
     m_initXPos = windowRect.left;
-
     if (!m_secondScreen) {
         move();
     }
     pressKey(AND);
-    m_photoBooth->showFlash(true);
-    Sleep(800);
-    m_photoBooth->showFlash(false);
+    m_triggerTimer->start(TRIGGER_TIME);
+}
+
+void CamTrigger::releaseTrigger()
+{
+    m_triggerTimer->stop();
+    qDebug() << "Release trigger";
     releaseKey(AND);
     if (!m_secondScreen) {
         move(true);
     }
+
 }
 
 bool CamTrigger::isOpen()
@@ -103,7 +116,7 @@ void CamTrigger::printSize()
     qDebug() << "Size of" << m_title.c_str() << ": width =" << windowWidth << "- height =" << windowHeight;
 }
 
-void CamTrigger::click(int x, int y, bool doubleClick)
+void CamTrigger::click(int x, int y)
 {
     if (!isOpen())
         return;
@@ -116,13 +129,6 @@ void CamTrigger::click(int x, int y, bool doubleClick)
 
     mouse_event(MOUSEEVENTF_LEFTDOWN, x + pos.x, y + pos.y, 0, 0);
     mouse_event(MOUSEEVENTF_LEFTUP, x + pos.x, y + pos.y, 0, 0);
-
-    if (doubleClick)
-    {
-        Sleep(100);
-        mouse_event(MOUSEEVENTF_LEFTDOWN, x + pos.x, y + pos.y, 0, 0);
-        mouse_event(MOUSEEVENTF_LEFTUP, x + pos.x, y + pos.y, 0, 0);
-    }
 }
 
 void CamTrigger::activate()
@@ -307,7 +313,6 @@ void CamTrigger::okDisconnect()
 {
     // Click OK on warning msgBox
     pressKey(ENTER);
-    Sleep(10);
     releaseKey(ENTER);
 
     openPreRemote();
@@ -319,7 +324,6 @@ void CamTrigger::refresh()
 
     // Click OK on warning msgBox
     pressKey(ENTER);
-    Sleep(10);
     releaseKey(ENTER);
 
     int nbTries = 0;
@@ -328,7 +332,7 @@ void CamTrigger::refresh()
         nbTries++;
     }
 
-    click(714, 341, false);
+    click(714, 341);
 
     m_state = REFRESHING;
     m_tempo = 0;
@@ -339,7 +343,8 @@ void CamTrigger::loadCamera()
     qDebug() << "Load camera";
     Sleep(2000); // Wait 2000ms to let time to PreRemote to show
     m_tempo = 0;
-    click(120, 75, true);
+    click(120, 75);
+    pressKey(ENTER);
     m_state = CAMERA_LOADING;
 }
 
@@ -364,14 +369,12 @@ void CamTrigger::openPreRemote()
 }
 
 
-void CamTrigger::closeLiveView() {
+void CamTrigger::closeLiveView()
+{
     if (!isFinalRemote()) {
         pressKey(CTRL);
-        Sleep(5);
         pressKey(L);
-        Sleep(200);
         releaseKey(L);
-        Sleep(5);
         releaseKey(CTRL);
     }
 }

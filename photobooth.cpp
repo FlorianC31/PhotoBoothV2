@@ -66,8 +66,8 @@ PhotoBooth::PhotoBooth(QWidget *parent) :
     m_photoTimer = new QTimer(this);
     connect(m_countDownTimer, &QTimer::timeout, this, &PhotoBooth::countDown);
     connect(m_sleepTimer, &QTimer::timeout, this, &PhotoBooth::goToSleep);
-    connect(m_remoteTimer, &QTimer::timeout, this, &PhotoBooth::checkRemote);
-    connect(m_cameraTimer, &QTimer::timeout, this, &PhotoBooth::cameraLoop);
+    connect(m_remoteTimer, &QTimer::timeout, m_camTrigger, &CamTrigger::checkLoop);
+    connect(m_cameraTimer, &QTimer::timeout, m_camera, &Camera::loop);
     connect(m_photoTimer, &QTimer::timeout, this, &PhotoBooth::loadPhoto);
     //connect(m_loadingTimer, &QTimer::timeout, this, &PhotoBooth::);
     m_remoteTimer->start(CHECK_REMOTE_PERIOD);
@@ -126,25 +126,6 @@ PhotoBooth::~PhotoBooth()
     delete m_ui;
 }
 
-
-/**
- * @brief PhotoBooth::checkRemote timer slot to periodically check if the remote is still open
- */
-void PhotoBooth::checkRemote()
-{
-    m_camTrigger->checkLoop();
-}
-
-
-/**
- * @brief PhotoBooth::cameraLoop timer slot to periodically get the camera frames
- */
-void PhotoBooth::cameraLoop()
-{
-    m_camera->loop();
-}
-
-
 /**
  * @brief PhotoBooth::loadPhoto timer slot to periodically check if the new photo is ready
  */
@@ -155,7 +136,6 @@ void PhotoBooth::loadPhoto()
         showPhoto();
     }
 }
-
 
 /**
  * @brief PhotoBooth::readingSettingsFile Read the settings.ini file to get all the user settings
@@ -371,6 +351,7 @@ void PhotoBooth::takePhoto()
  */
 void PhotoBooth::startLoading()
 {
+    qDebug() << "Start loading";
     m_ui->loading->show();
     m_ui->veilleButton->hide();
     m_ui->widgetPhoto->hide();
@@ -384,6 +365,7 @@ void PhotoBooth::startLoading()
  */
 void PhotoBooth::stopLoading()
 {
+    qDebug() << "Stop loading";
     m_ui->compteur->show();
     showCam();
 }

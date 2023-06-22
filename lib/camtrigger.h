@@ -48,8 +48,6 @@ private:
     int m_initXPos;
     bool m_secondScreen;
     int m_tempo;
-    QTimer* m_triggerTimer;
-    QTimer* m_focusTimer;
 
     bool isPreRemote() {return checkSize(930, 376);};
     bool isWarningMsg() {return checkSize(427, 159);};
@@ -86,9 +84,9 @@ public slots:
     void trigger();
     void checkLoop();
 
-private slots:
-    void releaseFocus();
-    void releaseTrigger();
+ signals:
+    void startLoading();
+    void stopLoading();
 };
 
 #endif // CAMTRIGGER_H

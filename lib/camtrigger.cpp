@@ -31,10 +31,8 @@ CamTrigger::CamTrigger(PhotoBooth* photoBooth, bool secondScreen) :
     m_triggerThread->start();
     this->moveToThread(m_triggerThread);
 
-    m_triggerTimer = new QTimer(this);
-    connect(m_triggerTimer, &QTimer::timeout, this, &CamTrigger::releaseTrigger);
-    m_focusTimer = new QTimer(this);
-    connect(m_focusTimer, &QTimer::timeout, this, &CamTrigger::releaseFocus);
+    connect(this, &CamTrigger::startLoading, m_photoBooth, &PhotoBooth::startLoading);
+    connect(this, &CamTrigger::stopLoading, m_photoBooth, &PhotoBooth::stopLoading);
 }
 
 CamTrigger::~CamTrigger()
@@ -53,17 +51,15 @@ void CamTrigger::focus()
         move();
     }
     pressKey(G);
-    m_focusTimer->start(FOCUS_TIME);
-}
 
-void CamTrigger::releaseFocus()
-{
-    m_focusTimer->stop();
+    QThread::msleep(FOCUS_TIME);
+
     releaseKey(G);
     if (!m_secondScreen) {
         move(true);
     }
 }
+
 
 void CamTrigger::trigger()
 {
@@ -74,13 +70,9 @@ void CamTrigger::trigger()
         move();
     }
     pressKey(AND);
-    m_triggerTimer->start(TRIGGER_TIME);
-}
 
-void CamTrigger::releaseTrigger()
-{
-    m_triggerTimer->stop();
-    qDebug() << "Release trigger";
+    QThread::msleep(TRIGGER_TIME);
+
     releaseKey(AND);
     if (!m_secondScreen) {
         move(true);
@@ -139,10 +131,10 @@ void CamTrigger::activate()
     SetForegroundWindow(m_handle);
     int nbTries = 0;
     while (!isActivated() && nbTries < MAX_NB_ACTIVATE_TRIES) {
-        Sleep(ACTIVATE_TRIES_DURATION);
+        QThread::msleep(ACTIVATE_TRIES_DURATION);
         nbTries++;
     }
-    Sleep(500);
+    QThread::msleep(500);
 }
 
 
@@ -188,6 +180,7 @@ void CamTrigger::move(bool back)
 
     if (back)
     {
+        qDebug() << m_title.c_str() << "moving back to x =" << m_initXPos;
         SetWindowPos(m_handle, 0, m_initXPos, windowRect.top, windowRect.right - windowRect.left, windowRect.bottom - windowRect.top, SWP_NOZORDER | SWP_NOACTIVATE);
         qDebug() << m_title.c_str() << "moved back to x =" << m_initXPos;
     }
@@ -287,8 +280,7 @@ void CamTrigger::checkLoop()
             break;
         }
 
-
-        Sleep(1000);
+        QThread::msleep(1000);
     }
 
 }
@@ -328,7 +320,7 @@ void CamTrigger::refresh()
 
     int nbTries = 0;
     while (!isPreRemote() && nbTries < MAX_NB_ACTIVATE_TRIES) {
-        Sleep(ACTIVATE_TRIES_DURATION);
+        QThread::msleep(ACTIVATE_TRIES_DURATION);
         nbTries++;
     }
 
@@ -341,7 +333,7 @@ void CamTrigger::refresh()
 void CamTrigger::loadCamera()
 {
     qDebug() << "Load camera";
-    Sleep(2000); // Wait 2000ms to let time to PreRemote to show
+    QThread::msleep(2000); // Wait 2000ms to let time to PreRemote to show
     m_tempo = 0;
     click(120, 75);
     pressKey(ENTER);

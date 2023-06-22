@@ -28,8 +28,6 @@ class PhotoBooth : public QWidget
 public:
     PhotoBooth(QWidget *parent = nullptr);
     ~PhotoBooth();
-    void startLoading();
-    void stopLoading();
     void showFlash(bool show);
 
 private:
@@ -109,9 +107,11 @@ private:
 private slots:
     void countDown();
     void goToSleep();
-    void checkRemote();
-    void cameraLoop();
     void loadPhoto();
+
+public slots:
+    void startLoading();
+    void stopLoading();
 
 signals:
     void initSignal(bool secondScreen);

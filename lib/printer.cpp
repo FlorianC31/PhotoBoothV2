@@ -8,10 +8,10 @@ Printer::Printer(bool rotate) : m_rotate(rotate)
 {
 }
 
-void Printer::print(QPixmap photo, unsigned int nbPrint){
+void Printer::print(QPixmap* photo, unsigned int nbPrint){
     qDebug() << "nbPrint:" << nbPrint;
 
-    QImage image = photo.toImage();
+    QImage image = photo->toImage();
     QImage* finalImage = &image;
 
     if (m_rotate) {

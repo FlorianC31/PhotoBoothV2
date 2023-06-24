@@ -17,7 +17,6 @@
 
 #define FOCUS_TIME 200
 #define TRIGGER_TIME 800
-#define WAIT_FOR_PHOTO_TIME 2000
 
 
 CamTrigger::CamTrigger(PhotoBooth* photoBooth, bool secondScreen) :
@@ -82,7 +81,6 @@ void CamTrigger::trigger()
     }
 
     if (m_state != RUNNING){
-        QThread::msleep(WAIT_FOR_PHOTO_TIME);
         emit endOfLoading();
         m_state = RUNNING;
     }

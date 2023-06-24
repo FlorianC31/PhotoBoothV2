@@ -22,6 +22,7 @@ class Camera;
 class CamTrigger;
 class Relay;
 class RelayDevice;
+class Photo;
 
 
 class PhotoBooth : public QWidget
@@ -36,7 +37,8 @@ public:
     enum Module{
         CAM_TRIGGER,
         CAMERA,
-        RELAY
+        RELAY,
+        PHOTO
     };
 
 private:
@@ -48,6 +50,7 @@ private:
     QMovie* m_movie;
 
     enum State{
+        INIT,
         SLEEPING,
         SHOWING_CAM,
         DISPLAY_PIC,
@@ -71,14 +74,13 @@ private:
     uint m_relayDevice;
     uint m_cameraDevice;
     uint m_resolutionMode;
-    QPixmap m_lastPhoto;
-    QPixmap m_lastPhoto2Print;
+    QPixmap* m_lastPhoto;
+    QPixmap* m_lastPhoto2Print;
 
     QTimer* m_countDownTimer;
     QTimer* m_sleepTimer;
     QTimer* m_remoteTimer;
     QTimer* m_cameraTimer;
-    QTimer* m_photoTimer;
     QTimer* m_loadingTimer;
     int m_count;
 
@@ -118,12 +120,12 @@ private:
 private slots:
     void countDown();
     void goToSleep();
-    void loadPhoto();
 
 public slots:
     void startLoading();
     void stopLoading();
     void endOfModuleLoading(PhotoBooth::Module module);
+    void loadNewPhoto(QPixmap* lastPhoto, QPixmap* lastPhoto2Print);
 
 signals:
     void initSignal(bool secondScreen);
@@ -132,6 +134,7 @@ signals:
     void flashSignal();
     void showLookUpSignal();
     void hideLookUpSignal();
+    void loadLastPhoto();
 };
 
 #endif // PhotoBooth_H

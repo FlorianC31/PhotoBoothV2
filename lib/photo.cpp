@@ -13,11 +13,21 @@
 #define TRIES_NUMBER 50 // Number of tries to get the last photo
 
 
-Photo::Photo(QString photoFolder, uint isoMax, bool addWatermark, QSize viewerSize) :
+Photo::Photo(PhotoBooth* photoBooth, QString photoFolder, uint isoMax, bool addWatermark, QSize viewerSize) :
+    m_photoBooth(photoBooth),
     m_isoMax(isoMax),
     m_addWatermark(addWatermark),
-    m_viewerSize(viewerSize)
+    m_viewerSize(viewerSize),
+    m_intialized(false)
 {
+    m_thread = new QThread();
+    m_thread->start();
+    this->moveToThread(m_thread);
+
+    connect(this, &Photo::sendNewPhoto, m_photoBooth, [this]() {
+        m_photoBooth->loadNewPhoto(&m_lastPhoto, &m_lastPhoto2Print);
+    });
+
     m_folder = QDir(photoFolder);
     m_pathToRecentFile = getLastJpg();
 
@@ -37,53 +47,45 @@ Photo::Photo(QString photoFolder, uint isoMax, bool addWatermark, QSize viewerSi
 
 Photo::~Photo()
 {
+    m_thread->quit();
+    m_thread->wait();
+    delete m_thread;
 }
 
-bool Photo::isThereNew()
+void Photo::loadLast()
 {
-    //int nbTries = TRIES_NUMBER;
+    int nbTries = TRIES_NUMBER;
 
     QString oldPhotoPath = m_pathToRecentFile;
     m_pathToRecentFile = getLastJpg();
 
-    /*do {
+    do {
         nbTries--;
-        Sleep(SLEEP_TIME);
+        QThread::msleep(SLEEP_TIME);
 
         if (nbTries == 0) {
             qDebug() << "ERROR: no new photo has been detected";
-            return false;
+            return;
         }
 
         m_pathToRecentFile = getLastJpg();
-    } while(m_pathToRecentFile == oldPhotoPath || m_pathToRecentFile == "");*/
+    } while(m_pathToRecentFile == oldPhotoPath || m_pathToRecentFile == "");
 
-    if (m_pathToRecentFile == oldPhotoPath || m_pathToRecentFile == "") {
-        return false;
-    }
-    return true;
-}
-
-
-/**
- * @brief Photo::getLast get the last photo from the photo folder
- * @param lastPhoto reference to the destination photo QPixmap for display
- * @param lastPhoto2Print reference to the destination photo QPixmap for printing
- */
-void Photo::getLast(QPixmap &lastPhoto, QPixmap &lastPhoto2Print)
-{
     // Get the last photo
     QPixmap newPhoto = QPixmap(m_pathToRecentFile);
 
     // Resize the photo
-    lastPhoto2Print = newPhoto.scaled(m_resizedPhotoSize);
+    m_lastPhoto2Print = newPhoto.scaled(m_resizedPhotoSize);
 
     if (m_addWatermark) {
-        lastPhoto2Print = pasteWatermark(lastPhoto2Print);
+        m_lastPhoto2Print = pasteWatermark(m_lastPhoto2Print);
     }
 
     // Return the final photo
-    lastPhoto = newPhoto.scaled(m_viewerSize);
+    m_lastPhoto = newPhoto.scaled(m_viewerSize);
+
+    m_intialized = true;
+    emit sendNewPhoto();
 }
 
 /**

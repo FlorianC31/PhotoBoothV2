@@ -8,19 +8,26 @@
 #include <QPixmap>
 #include <QPainter>
 
-class Photo
+#include <photobooth.h>
+
+class PhotoBooth;
+
+class Photo : public QObject
 {
+    Q_OBJECT
+
 public:
-    Photo(QString photoFolder, uint isoMax, bool m_addWatermark, QSize viewerSize);
+    Photo(PhotoBooth* photoBooth, QString photoFolder, uint isoMax, bool m_addWatermark, QSize viewerSize);
     ~Photo();
-    void getLast(QPixmap &lastPhoto, QPixmap &lastPhoto2Print);
-    bool isThereNew();
     bool checkIso();
+    inline bool isInitialized() {return m_intialized;};
 
 private:
     QPixmap pasteWatermark(QPixmap &photo);
     QString getLastJpg();
 
+    PhotoBooth* m_photoBooth;
+    QThread* m_thread;
     uint m_isoMax;
     QDir m_folder;
     bool m_addWatermark;
@@ -29,6 +36,15 @@ private:
     QPoint m_watermarkPos;
     QString m_pathToRecentFile;
     QSize m_viewerSize;
+    QPixmap m_lastPhoto2Print;
+    QPixmap m_lastPhoto;
+    bool m_intialized;
+
+public slots:
+    void loadLast();
+
+signals:
+    void sendNewPhoto();
 };
 
 #endif // PHOTO_H

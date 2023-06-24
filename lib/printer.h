@@ -8,7 +8,7 @@ class Printer
 {
 public:
     Printer(bool rotate);
-    void print(QPixmap photo, unsigned int nbPrint);
+    void print(QPixmap* photo, unsigned int nbPrint);
 
 private:
     bool m_rotate;

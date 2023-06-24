@@ -17,11 +17,11 @@ PhotoBooth::PhotoBooth(QWidget *parent) :
     m_printer(nullptr),
     m_movie(nullptr),
     m_settingFile("settings.ini"),
+    m_state(INIT),
     m_countDownTimer(nullptr),
     m_sleepTimer(nullptr),
     m_remoteTimer(nullptr),
     m_cameraTimer(nullptr),
-    m_photoTimer(nullptr),
     m_loadingTimer(nullptr),
     m_lightOn(false),
     m_relay(nullptr),
@@ -66,13 +66,15 @@ PhotoBooth::PhotoBooth(QWidget *parent) :
     m_sleepTimer = new QTimer(this);
     m_remoteTimer = new QTimer(this);
     m_cameraTimer = new QTimer(this);
-    m_photoTimer = new QTimer(this);
     connect(m_countDownTimer, &QTimer::timeout, this, &PhotoBooth::countDown);
     connect(m_sleepTimer, &QTimer::timeout, this, &PhotoBooth::goToSleep);
-    connect(m_photoTimer, &QTimer::timeout, this, &PhotoBooth::loadPhoto);
     qDebug() << " -> Done";
 
-    // Creation of children objects
+    // Creation of children objects    
+    qDebug() << "Loading of Photo";
+    m_photo = new Photo(this, m_photoFolder, m_isoMax, m_addWatermark, m_ui->viewer->size());
+    connect(this, &PhotoBooth::loadLastPhoto, m_photo, &Photo::loadLast);
+
     qDebug() << "Loading of CamTrigger";
     m_camTrigger = new CamTrigger(this, m_secondScreen);
     connect(m_remoteTimer, &QTimer::timeout, m_camTrigger, &CamTrigger::checkLoop);
@@ -111,7 +113,6 @@ PhotoBooth::~PhotoBooth()
     delete m_sleepTimer;
     delete m_remoteTimer;
     delete m_cameraTimer;
-    delete m_photoTimer;
     delete m_loadingTimer;
 
     delete m_camera;
@@ -124,16 +125,6 @@ PhotoBooth::~PhotoBooth()
     delete m_ui;
 }
 
-/**
- * @brief PhotoBooth::loadPhoto timer slot to periodically check if the new photo is ready
- */
-void PhotoBooth::loadPhoto()
-{
-    if(m_photo->isThereNew()) {
-        m_photoTimer->stop();
-        showPhoto();
-    }
-}
 
 /**
  * @brief PhotoBooth::readingSettingsFile Read the settings.ini file to get all the user settings
@@ -372,13 +363,19 @@ void PhotoBooth::stopLoading()
 /**
  * @brief PhotoBooth::showPhoto show the last photo in the UI
  */
-void PhotoBooth::showPhoto()
+void PhotoBooth::loadNewPhoto(QPixmap* lastPhoto, QPixmap* lastPhoto2Print)
 {
+    if (m_state == INIT){
+        endOfModuleLoading(PHOTO);
+        return;
+    }
+
+    m_lastPhoto = lastPhoto;
+    m_lastPhoto2Print = lastPhoto2Print;
+
     m_ui->veilleButton->hide();
     m_ui->widgetPhoto->hide();
     m_state = DISPLAY_PIC;
-
-    m_photo->getLast(m_lastPhoto, m_lastPhoto2Print);
 
     if (!m_lightOn) {
         // If the iso of the last photo are higher than max, turn on the light
@@ -390,7 +387,7 @@ void PhotoBooth::showPhoto()
     }
 
     // Resize the photo and display it
-    m_ui->viewer->setPixmap(m_lastPhoto);
+    m_ui->viewer->setPixmap(*m_lastPhoto);
 
     m_nbPrint = 1;
     updateNbPrint(0);
@@ -543,11 +540,9 @@ void PhotoBooth::countDown()
         break;
     case -4:
         startLoading();
-        m_ui->flash->hide();
-        break;
-    case -8:
+        m_ui->flash->hide();        
+        emit loadLastPhoto();
         m_countDownTimer->stop();
-        m_photoTimer->start(100);
         break;
     }
 }
@@ -585,21 +580,22 @@ void PhotoBooth::endOfModuleLoading(PhotoBooth::Module module)
         break;
     case CAM_TRIGGER:
         qDebug() << " -> CamTrigger loaded";
-        qDebug() << "Loading of Photo";
-        m_photo = new Photo(m_photoFolder, m_isoMax, m_addWatermark, m_ui->viewer->size());
-        qDebug() << " -> Photo loaded";
+        emit loadLastPhoto();
         break;
     case RELAY:
         qDebug() << " -> Relay loaded";
         break;
+    case PHOTO:
+        qDebug() << " -> Photo loaded";
+        break;
     }
 
-    if(m_camera != nullptr && m_camTrigger != nullptr && m_relay != nullptr) {
+    if(m_camera != nullptr && m_camTrigger != nullptr && m_relay != nullptr && m_photo != nullptr) {
         qDebug() << "Camera loaded:" << m_camera->isLoaded();
         qDebug() << "CamTrigger loaded:" << m_camTrigger->isLoaded();
         qDebug() << "Relay connected:" << m_relay->isConnected();
 
-        if (m_camera->isLoaded() && m_camTrigger->isLoaded() && m_relay->isConnected()) {
+        if (m_camera->isLoaded() && m_camTrigger->isLoaded() && m_relay->isConnected() && m_photo->isInitialized()) {
             stopLoading();
         }
     }

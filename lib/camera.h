@@ -18,18 +18,21 @@ class Camera : public QObject
     Q_OBJECT
 
 public:
-    Camera(QLabel* camView, uint camId, uint resolutionMode, bool upsideDown, bool mirror);
+    Camera(PhotoBooth* photobooth, QLabel* camView, uint camId, uint resolutionMode, bool upsideDown, bool mirror);
     ~Camera();
+    inline bool isLoaded() {return m_cap->isOpened();};
 
+    void connection();
     void start();
     void stop();
 
 private:
+    PhotoBooth* m_photoBooth;
     bool m_isRunning;
     QLabel* m_camView;
     uint m_camId;
     cv::VideoCapture* m_cap;
-    QThread* m_cameraThread;
+    QThread* m_thread;
     int m_resolution[2];
     int m_cropLeft;
     int m_cropWidth;
@@ -39,6 +42,8 @@ private:
 public slots:
     void loop();
 
+signals:
+    void endOfLoading();
 };
 
 #endif // CAMERA_H

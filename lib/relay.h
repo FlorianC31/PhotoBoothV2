@@ -4,23 +4,35 @@
 
 #include <Windows.h>
 #include <ftd2xx.h>
+#include <QtCore>
 
+#include <photobooth.h>
 
-class Relay
+class PhotoBooth;
+
+class Relay : public QObject
 {
-public:
-    Relay(unsigned int deviceNumber);
-    ~Relay();
+    Q_OBJECT
 
-    bool connect();
+public:
+    Relay(PhotoBooth* photoBooth, unsigned int deviceNumber);
+    ~Relay();    
+
     bool isConnected() { return m_isConnected;};
     FT_HANDLE* getFtHandle() { return m_ftHandle;};
     void set(unsigned char slotId, bool state);
+    bool connection();
 
 private:
+    PhotoBooth* m_photoBooth;
+    QThread* m_thread;
     bool m_isConnected;
     FT_HANDLE* m_ftHandle;
     unsigned int m_deviceNumber;
+
+
+signals:
+    void endOfLoading();
 };
 
 

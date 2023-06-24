@@ -17,6 +17,7 @@
 
 #define FOCUS_TIME 200
 #define TRIGGER_TIME 800
+#define WAIT_FOR_PHOTO_TIME 2000
 
 
 CamTrigger::CamTrigger(PhotoBooth* photoBooth, bool secondScreen) :
@@ -27,19 +28,21 @@ CamTrigger::CamTrigger(PhotoBooth* photoBooth, bool secondScreen) :
     m_secondScreen(secondScreen)
 {
     // Creation and initialisation of trigger thread
-    m_triggerThread = new QThread();
-    m_triggerThread->start();
-    this->moveToThread(m_triggerThread);
+    m_thread = new QThread();
+    m_thread->start();
+    this->moveToThread(m_thread);
 
     connect(this, &CamTrigger::startLoading, m_photoBooth, &PhotoBooth::startLoading);
-    connect(this, &CamTrigger::stopLoading, m_photoBooth, &PhotoBooth::stopLoading);
+    connect(this, &CamTrigger::endOfLoading, m_photoBooth, [this]() {
+        m_photoBooth->endOfModuleLoading(PhotoBooth::CAM_TRIGGER);
+    });
 }
 
 CamTrigger::~CamTrigger()
 {
-    m_triggerThread->quit();
-    m_triggerThread->wait();
-    delete m_triggerThread;
+    m_thread->quit();
+    m_thread->wait();
+    delete m_thread;
 }
 
 void CamTrigger::focus()
@@ -78,6 +81,11 @@ void CamTrigger::trigger()
         move(true);
     }
 
+    if (m_state != RUNNING){
+        QThread::msleep(WAIT_FOR_PHOTO_TIME);
+        emit endOfLoading();
+        m_state = RUNNING;
+    }
 }
 
 bool CamTrigger::isOpen()
@@ -194,20 +202,20 @@ void CamTrigger::move(bool back)
 
 void CamTrigger::checkLoop()
 {
-    if (isFinalRemote() && m_state == RUNING)
+    if (isFinalRemote() && m_state == RUNNING)
     {
         qDebug() << "LOOP - Camera Final Remote already open";
         return;
     }
 
-    m_photoBooth->startLoading();
+    emit startLoading();
 
     if (!isFinalRemote()){
         m_state = INIT;
         m_tempo = 0;
     }
 
-    while (m_state != RUNING) {
+    while (m_state != RUNNING) {
 
         switch (m_state){
         case INIT:
@@ -272,8 +280,8 @@ void CamTrigger::checkLoop()
                 m_tempo++;
             break;
 
-        case RUNING:
-            qDebug() << "State: RUNING";
+        case RUNNING:
+            qDebug() << "State: RUNNING";
             break;
         default:
             raiseErrorMsg("initalizing state");
@@ -291,9 +299,6 @@ void CamTrigger::init()
 
     // launch a useless trigger to disable hasardous previous focus locked
     trigger();
-    m_photoBooth->stopLoading();
-
-    m_state = RUNING;
 }
 
 void CamTrigger::raiseErrorMsg(std::string errorMsg) {

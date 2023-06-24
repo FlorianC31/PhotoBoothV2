@@ -7,28 +7,38 @@
 #define WAIT_TIME 2             // (secondes) Delay between 2 tries
 #define ELECTRICITY_FREQ 50     // (Hz) AC Electicity network frequency
 
-Relay::Relay(unsigned int deviceNumber) :
+Relay::Relay(PhotoBooth* photoBooth, unsigned int deviceNumber) :
+    m_photoBooth(photoBooth),
     m_isConnected(false),
     m_ftHandle(nullptr),
     m_deviceNumber(deviceNumber)
 {
+    // Creation and initialisation of trigger thread
+    m_thread = new QThread();
+    m_thread->start();
+    this->moveToThread(m_thread);
+
+    connect(this, &Relay::endOfLoading, m_photoBooth, [this]() {
+        m_photoBooth->endOfModuleLoading(PhotoBooth::RELAY);
+    });
 }
 
 Relay::~Relay()
 {
-
+    m_thread->quit();
+    m_thread->wait();
+    delete m_thread;
 }
 
-bool Relay::connect()
+bool Relay::connection()
 {
-    FT_STATUS ftStatus;
-
+    /*FT_STATUS ftStatus;
 
     ftStatus = FT_Open(m_deviceNumber, m_ftHandle);
 
     unsigned int nbTry = 1;
     while (ftStatus != FT_OK && nbTry < MAX_TRY_CONNECT) {
-        Sleep(WAIT_TIME * 1000);
+        QThread::msleep(WAIT_TIME * 1000);
         ftStatus = FT_Open(m_deviceNumber, m_ftHandle);
         nbTry++;
     }
@@ -39,7 +49,9 @@ bool Relay::connect()
     }
 
     FT_SetBitMode(m_ftHandle, 0xFF, 0x01); // IMPORTANT TO HAVE: This sets up the FTDI device as "Bit Bang" mode
-
+    */
+    m_isConnected = true;
+    emit endOfLoading();
     return true;
 }
 
@@ -54,7 +66,7 @@ void Relay::set(unsigned char slotId, bool transition)
 
     FT_SetBitMode(m_ftHandle, slotId, ucEnable);
     // Sleep 1/4 of electricty AC cycle and redo action to be sure to avoid to activate relay when current = 0 which cause the non-locking of the relay (in millisecond)
-    Sleep(1000 / ELECTRICITY_FREQ / 4);
+    QThread::msleep(1000 / ELECTRICITY_FREQ / 4);
     FT_SetBitMode(m_ftHandle, slotId, ucEnable);
 }
 

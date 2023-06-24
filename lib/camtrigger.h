@@ -22,10 +22,11 @@ class CamTrigger : public QObject
 public:
     CamTrigger(PhotoBooth* photoBooth, bool secondScreen);
     ~CamTrigger();
+    inline bool isLoaded() {return m_state == State::RUNNING;};
 
 private:
     PhotoBooth* m_photoBooth;
-    QThread* m_triggerThread;
+    QThread* m_thread;
 
     enum KEY{
         L,
@@ -40,7 +41,7 @@ private:
         OPENING_REMOTE,
         REFRESHING,
         CAMERA_LOADING,
-        RUNING
+        RUNNING
     } m_state;
 
     std::string m_title;
@@ -84,9 +85,9 @@ public slots:
     void trigger();
     void checkLoop();
 
- signals:
+signals:
     void startLoading();
-    void stopLoading();
+    void endOfLoading();
 };
 
 #endif // CAMTRIGGER_H

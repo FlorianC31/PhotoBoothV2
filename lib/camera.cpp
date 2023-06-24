@@ -24,18 +24,22 @@
  * @param upsideDown rotate the frame to 180°
  * @param mirror mirroring the frame
  */
-Camera::Camera(QLabel* camView, uint camId, uint resolutionMode, bool upsideDown, bool mirror) :
+Camera::Camera(PhotoBooth* photoBooth, QLabel* camView, uint camId, uint resolutionMode, bool upsideDown, bool mirror) :
+    m_photoBooth(photoBooth),
     m_isRunning(false),
     m_camView(camView),
     m_camId(camId),
     m_cap(nullptr),
-    m_cameraThread(nullptr),
+    m_thread(nullptr),
     m_upsideDown(upsideDown),
     m_mirror(mirror)
 {
-    m_cameraThread = new QThread();
-    m_cameraThread->start();
-    this->moveToThread(m_cameraThread);
+    m_thread = new QThread();
+    m_thread->start();
+    this->moveToThread(m_thread);
+    connect(this, &Camera::endOfLoading, m_photoBooth, [this]() {
+        m_photoBooth->endOfModuleLoading(PhotoBooth::CAMERA);
+    });
 
     int resTable[3][2];
     resTable[0][0] = RESOLUTION0_H;
@@ -57,11 +61,15 @@ Camera::Camera(QLabel* camView, uint camId, uint resolutionMode, bool upsideDown
     m_cropLeft =  round((RATIO_16_9 - RATIO_3_2) * m_resolution[1] / 2) + MARGIN;
     m_cropWidth = RATIO_3_2 * m_resolution[1] -  2 * MARGIN;
 
+}
+
+void Camera::connection()
+{
     // Create a video capture object using the DirectShow backend
     int nbTries = TRIES_NUMBER;
     do {
         nbTries--;
-        Sleep(SLEEP_TIME);
+        QThread::msleep(SLEEP_TIME);
 
         m_cap = new cv::VideoCapture(1, cv::CAP_DSHOW);
         m_cap->open(m_camId);
@@ -76,6 +84,8 @@ Camera::Camera(QLabel* camView, uint camId, uint resolutionMode, bool upsideDown
     // Set resolution
     m_cap->set(cv::CAP_PROP_FRAME_WIDTH, m_resolution[0]);
     m_cap->set(cv::CAP_PROP_FRAME_HEIGHT, m_resolution[1]);
+
+    emit endOfLoading();
 }
 
 /**
@@ -84,9 +94,9 @@ Camera::Camera(QLabel* camView, uint camId, uint resolutionMode, bool upsideDown
 Camera::~Camera()
 {
     m_isRunning = false;
-    m_cameraThread->quit();
-    m_cameraThread->wait();
-    delete m_cameraThread;
+    m_thread->quit();
+    m_thread->wait();
+    delete m_thread;
     delete m_cap;
 }
 

@@ -20,6 +20,9 @@ QT_END_NAMESPACE
 
 class Camera;
 class CamTrigger;
+class Relay;
+class RelayDevice;
+
 
 class PhotoBooth : public QWidget
 {
@@ -29,6 +32,12 @@ public:
     PhotoBooth(QWidget *parent = nullptr);
     ~PhotoBooth();
     void showFlash(bool show);
+
+    enum Module{
+        CAM_TRIGGER,
+        CAMERA,
+        RELAY
+    };
 
 private:
     Ui::PhotoBooth* m_ui;
@@ -99,6 +108,8 @@ private:
     void checkIso();
     void reinitSleep();
 
+    bool allModulesLoaded();
+
     Relay* m_relay;
     RelayDevice* m_pcFan;
     RelayDevice* m_printerFan;
@@ -112,11 +123,15 @@ private slots:
 public slots:
     void startLoading();
     void stopLoading();
+    void endOfModuleLoading(PhotoBooth::Module module);
 
 signals:
     void initSignal(bool secondScreen);
     void focusSignal();
     void triggerSignal();
+    void flashSignal();
+    void showLookUpSignal();
+    void hideLookUpSignal();
 };
 
 #endif // PhotoBooth_H

@@ -15,6 +15,7 @@ PhotoBooth::PhotoBooth(QWidget *parent) :
     m_camTrigger(nullptr),
     m_photo(nullptr),
     m_printer(nullptr),
+    m_movie(nullptr),
     m_settingFile("settings.ini"),
     m_countDownTimer(nullptr),
     m_sleepTimer(nullptr),
@@ -45,6 +46,8 @@ PhotoBooth::PhotoBooth(QWidget *parent) :
     m_ui->loading->setMovie(m_movie);
     m_movie->start();
 
+    startLoading();
+
     // Read the settings file
     qDebug() << "READING SETTINGS FILE";
     if (!readingSettingsFile()) {
@@ -66,40 +69,35 @@ PhotoBooth::PhotoBooth(QWidget *parent) :
     m_photoTimer = new QTimer(this);
     connect(m_countDownTimer, &QTimer::timeout, this, &PhotoBooth::countDown);
     connect(m_sleepTimer, &QTimer::timeout, this, &PhotoBooth::goToSleep);
-    connect(m_remoteTimer, &QTimer::timeout, m_camTrigger, &CamTrigger::checkLoop);
-    connect(m_cameraTimer, &QTimer::timeout, m_camera, &Camera::loop);
     connect(m_photoTimer, &QTimer::timeout, this, &PhotoBooth::loadPhoto);
-    //connect(m_loadingTimer, &QTimer::timeout, this, &PhotoBooth::);
-    m_remoteTimer->start(CHECK_REMOTE_PERIOD);
     qDebug() << " -> Done";
 
     // Creation of children objects
-    qDebug() << "CREATION OF CamTrigger";
+    qDebug() << "Loading of CamTrigger";
     m_camTrigger = new CamTrigger(this, m_secondScreen);
-    qDebug() << " -> Done";
-    qDebug() << "CREATION OF Camera";
-    m_camera = new Camera(m_ui->camView, m_cameraDevice, m_resolutionMode, m_upsideDown, m_mirror);
-    qDebug() << " -> Done";
-    qDebug() << "CREATION OF Relay";
-    m_relay = new Relay(m_relayDevice);
-    qDebug() << " -> Done";
-    qDebug() << "CREATION OF Photo";
-    m_photo = new Photo(m_photoFolder, m_isoMax, m_addWatermark, m_ui->viewer->size());
-    qDebug() << " -> Done";
-    qDebug() << "CREATION OF Printer";
+    connect(m_remoteTimer, &QTimer::timeout, m_camTrigger, &CamTrigger::checkLoop);
+    m_remoteTimer->start(CHECK_REMOTE_PERIOD);
+
+    qDebug() << "Loading of Camera";
+    m_camera = new Camera(this, m_ui->camView, m_cameraDevice, m_resolutionMode, m_upsideDown, m_mirror);
+    connect(m_cameraTimer, &QTimer::timeout, m_camera, &Camera::loop);
+    m_camera->connection();
+
+    qDebug() << "Loading of Relay";
+    settingRelayDevices();
+
+    qDebug() << "Loading of Printer";
     m_printer = new Printer(m_upsideDown);
-    qDebug() << " -> Done";
+    qDebug() << " -> Printer loaded";
 
     // Setting children    
-    qDebug() << "SETTING CHILDREN OBJECT";
+    qDebug() << "SETTING CHILDREN OBJECTS";
     settingRelayDevices();
     connect(this, &PhotoBooth::focusSignal, m_camTrigger, &CamTrigger::focus);
     connect(this, &PhotoBooth::triggerSignal, m_camTrigger, &CamTrigger::trigger);
-    qDebug() << " -> Done";
+    qDebug() << " -> Children objects set";
 
-    qDebug() << "END OF INIT";
 }
-
 
 /**
  * @brief PhotoBooth::~PhotoBooth PhotoBooth destuctor
@@ -560,10 +558,13 @@ void PhotoBooth::countDown()
  */
 void PhotoBooth::settingRelayDevices()
 {
-    m_relay = new Relay(m_relayDevice);
+    m_relay = new Relay(this, m_relayDevice);
     m_pcFan = new RelayDevice(m_relay, m_relaysConfig["pcFan"]);
     m_printerFan = new RelayDevice(m_relay, m_relaysConfig["printerFan"]);
     m_light = new RelayDevice(m_relay, m_relaysConfig["light"]);
+    if(!m_relay->connection()){
+        qDebug() << "ERROR on relay connection";
+    }
 }
 
 void PhotoBooth::showFlash(bool show)
@@ -573,5 +574,33 @@ void PhotoBooth::showFlash(bool show)
     }
     else{
         m_ui->flash->hide();
+    }
+}
+
+void PhotoBooth::endOfModuleLoading(PhotoBooth::Module module)
+{
+    switch (module){
+    case CAMERA:
+        qDebug() << " -> Camera loaded";
+        break;
+    case CAM_TRIGGER:
+        qDebug() << " -> CamTrigger loaded";
+        qDebug() << "Loading of Photo";
+        m_photo = new Photo(m_photoFolder, m_isoMax, m_addWatermark, m_ui->viewer->size());
+        qDebug() << " -> Photo loaded";
+        break;
+    case RELAY:
+        qDebug() << " -> Relay loaded";
+        break;
+    }
+
+    if(m_camera != nullptr && m_camTrigger != nullptr && m_relay != nullptr) {
+        qDebug() << "Camera loaded:" << m_camera->isLoaded();
+        qDebug() << "CamTrigger loaded:" << m_camTrigger->isLoaded();
+        qDebug() << "Relay connected:" << m_relay->isConnected();
+
+        if (m_camera->isLoaded() && m_camTrigger->isLoaded() && m_relay->isConnected()) {
+            stopLoading();
+        }
     }
 }

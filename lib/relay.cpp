@@ -44,7 +44,7 @@ bool Relay::connection()
     }
 
     if (ftStatus != FT_OK) {
-        qDebug() << "Error: Impossible to connect to relay after" << MAX_TRY_CONNECT << "tries;";
+        qDebug() << "RELAY - ERROR: Impossible to connect to relay after" << MAX_TRY_CONNECT << "tries;";
         return false;
     }
 

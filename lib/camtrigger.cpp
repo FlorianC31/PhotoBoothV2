@@ -178,14 +178,14 @@ void CamTrigger::move(bool back)
 
     if (back)
     {
-        qDebug() << m_title.c_str() << "moving back to x =" << m_initXPos;
+        /*qDebug() << m_title.c_str() << "moving back to x =" << m_initXPos;
         SetWindowPos(m_handle, 0, m_initXPos, windowRect.top, windowRect.right - windowRect.left, windowRect.bottom - windowRect.top, SWP_NOZORDER | SWP_NOACTIVATE);
-        qDebug() << m_title.c_str() << "moved back to x =" << m_initXPos;
+        qDebug() << m_title.c_str() << "moved back to x =" << m_initXPos;*/
     }
     else
     {
         SetWindowPos(m_handle, 0, m_initXPos + MOVE_DISTANCE, windowRect.top, windowRect.right - windowRect.left, windowRect.bottom - windowRect.top, SWP_NOZORDER | SWP_NOACTIVATE);
-        qDebug() << m_title.c_str() << "moved to x =" << m_initXPos + MOVE_DISTANCE;
+        qDebug() << "CAMTRIGGER -" << m_title.c_str() << "moved to x =" << m_initXPos + MOVE_DISTANCE;
     }
 }
 
@@ -194,7 +194,7 @@ void CamTrigger::checkLoop()
 {
     if (isFinalRemote() && m_state == RUNNING)
     {
-        qDebug() << "LOOP - Camera Final Remote already open";
+        //qDebug() << "CAMTRIGGER - LOOP - Camera Final Remote already open";
         return;
     }
 
@@ -209,7 +209,7 @@ void CamTrigger::checkLoop()
 
         switch (m_state){
         case INIT:
-            qDebug() << "State: INIT";
+            qDebug() << "CAMTRIGGER - State: INIT";
             if (!isOpen())
                 openPreRemote();
             else if (isPreRemote())
@@ -229,7 +229,7 @@ void CamTrigger::checkLoop()
             break;
 
         case OPENING_REMOTE:
-            qDebug() << "State: OPENING_REMOTE -" << m_tempo << "/" << MAX_OPEN_TEMPO;
+            qDebug() << "CAMTRIGGER - State: OPENING_REMOTE -" << m_tempo << "/" << MAX_OPEN_TEMPO;
             if (isPreRemote())
                 loadCamera();
             else if (isWarningMsg())
@@ -241,7 +241,7 @@ void CamTrigger::checkLoop()
             break;
 
         case REFRESHING:
-            qDebug() << "State: REFRESHING -" << m_tempo << "/" << REFRESH_TEMPO;
+            qDebug() << "CAMTRIGGER - State: REFRESHING -" << m_tempo << "/" << REFRESH_TEMPO;
             if (isPreRemote() && m_tempo == REFRESH_TEMPO)
                 loadCamera();
             else if (isWarningMsg())
@@ -257,7 +257,7 @@ void CamTrigger::checkLoop()
             break;
 
         case CAMERA_LOADING:
-            qDebug() << "State: CAMERA_LOADING -" << m_tempo << "/" << MAX_LOAD_TEMPO;
+            qDebug() << "CAMTRIGGER - State: CAMERA_LOADING -" << m_tempo << "/" << MAX_LOAD_TEMPO;
             if (isFinalRemote())
                 init();
             else if (isLiveView())
@@ -271,7 +271,7 @@ void CamTrigger::checkLoop()
             break;
 
         case RUNNING:
-            qDebug() << "State: RUNNING";
+            qDebug() << "CAMTRIGGER - State: RUNNING";
             break;
         default:
             raiseErrorMsg("initalizing state");
@@ -292,7 +292,7 @@ void CamTrigger::init()
 }
 
 void CamTrigger::raiseErrorMsg(std::string errorMsg) {
-    qDebug() << "ERROR: Error while" << errorMsg.c_str();
+    qDebug() << "CAMTRIGGER - ERROR: Error while" << errorMsg.c_str();
     m_state = INIT;
 }
 
@@ -307,7 +307,7 @@ void CamTrigger::okDisconnect()
 
 void CamTrigger::refresh()
 {
-    qDebug() << "Refresh";
+    qDebug() << "CAMTRIGGER - Refresh";
 
     // Click OK on warning msgBox
     pressKey(ENTER);
@@ -327,7 +327,7 @@ void CamTrigger::refresh()
 
 void CamTrigger::loadCamera()
 {
-    qDebug() << "Load camera";
+    qDebug() << "CAMTRIGGER - Load camera";
     QThread::msleep(2000); // Wait 2000ms to let time to PreRemote to show
     m_tempo = 0;
     click(220, 75);
@@ -340,10 +340,10 @@ void CamTrigger::loadCamera()
 void CamTrigger::openPreRemote()
 {
     m_tempo = 0;
-    qDebug() << "Open PreRemote";
+    qDebug() << "CAMTRIGGER - Open PreRemote";
 
     if (isPreRemote()) {
-        qDebug() << "Remote is already open";
+        qDebug() << "CAMTRIGGER - Remote is already open";
         return;
     }
 

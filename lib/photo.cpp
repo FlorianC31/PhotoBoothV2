@@ -64,7 +64,7 @@ void Photo::loadLast()
         QThread::msleep(SLEEP_TIME);
 
         if (nbTries == 0) {
-            qDebug() << "ERROR: no new photo has been detected";
+            qDebug() << "PHOTO - ERROR: no new photo has been detected";
             return;
         }
 
@@ -72,7 +72,7 @@ void Photo::loadLast()
     } while(m_pathToRecentFile == oldPhotoPath || m_pathToRecentFile == "");
 
     // Get the last photo
-    QPixmap newPhoto = QPixmap(m_pathToRecentFile);
+    QPixmap newPhoto(m_pathToRecentFile);
 
     // Resize the photo
     m_lastPhoto2Print = newPhoto.scaled(m_resizedPhotoSize);
@@ -99,8 +99,10 @@ QString Photo::getLastJpg()
 
     if (!fileList.isEmpty()) {
         // Get the path to the most recent file in the list:
+        qDebug() << "PHOTO - Last JPG:" << fileList.front().absoluteFilePath();
         return fileList.front().absoluteFilePath();
     }
+    qDebug() << "PHOTO - Photo Folder is empty";
     return "";
  }
 
@@ -133,7 +135,7 @@ bool Photo::checkIso()
     // Read the JPEG file into a buffer
     FILE *fp = std::fopen(m_pathToRecentFile.toStdString().c_str(), "rb");
     if (!fp) {
-      qDebug() << "ERROR: CheckISO - Can't open file.";
+      qDebug() << "PHOTO - ERROR: CheckISO - Can't open file.";
       return false;
     }
     fseek(fp, 0, SEEK_END);
@@ -141,7 +143,7 @@ bool Photo::checkIso()
     rewind(fp);
     unsigned char *buf = new unsigned char[fsize];
     if (fread(buf, 1, fsize, fp) != fsize) {
-      qDebug() << "ERROR: CheckISO - Can't read file.";
+      qDebug() << "PHOTO - ERROR: CheckISO - Can't read file.";
       delete[] buf;
       return false;
     }
@@ -152,7 +154,7 @@ bool Photo::checkIso()
     int code = result.parseFrom(buf, fsize);
     delete[] buf;
     if (code) {
-      qDebug() << "ERROR: CheckISO - Error parsing EXIF: code" << code;
+      qDebug() << "PHOTO - ERROR: CheckISO - Error parsing EXIF: code" << code;
       return -3;
     }
 

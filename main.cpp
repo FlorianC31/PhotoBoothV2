@@ -11,33 +11,38 @@ void messageHandler(QtMsgType type, const QMessageLogContext& context, const QSt
     {
         QTextStream stream(&file);
 
-        // Time Stamp
-        QDateTime currentDateTime = QDateTime::currentDateTime();
-        QString timestamp = currentDateTime.toString("yyyy-MM-dd HH:mm:ss.zzz");
-        stream << timestamp << " ";
-
-        // Type prefix
-        switch (type)
-        {
-            case QtDebugMsg:
-                stream << "[DEBUG] ";
-                break;
-            case QtWarningMsg:
-                stream << "[WARNING] ";
-                break;
-            case QtCriticalMsg:
-                stream << "[CRITICAL] ";
-                break;
-            case QtFatalMsg:
-                stream << "[FATAL] ";
-                break;
-            case QtInfoMsg:
-                stream << "[INFO] ";
-                break;
+        if(msg == " ") {
+            stream << Qt::endl;
         }
+        else{
+            // Time Stamp
+            QDateTime currentDateTime = QDateTime::currentDateTime();
+            QString timestamp = currentDateTime.toString("yyyy-MM-dd HH:mm:ss.zzz");
+            stream << timestamp << " ";
 
-        // Message
-        stream << msg << Qt::endl;
+            // Type prefix
+            switch (type)
+            {
+                case QtDebugMsg:
+                    stream << "[DEBUG] ";
+                    break;
+                case QtWarningMsg:
+                    stream << "[WARNING] ";
+                    break;
+                case QtCriticalMsg:
+                    stream << "[CRITICAL] ";
+                    break;
+                case QtFatalMsg:
+                    stream << "[FATAL] ";
+                    break;
+                case QtInfoMsg:
+                    stream << "[INFO] ";
+                    break;
+            }
+
+            // Message
+            stream << msg << Qt::endl;
+        }
     }
 }
 
@@ -50,7 +55,7 @@ int main(int argc, char *argv[])
     freopen("CONOUT$", "w", stdout);
     freopen("CONOUT$", "w", stderr);*/
 
-    //qInstallMessageHandler(messageHandler);
+    qInstallMessageHandler(messageHandler);
 
     PhotoBooth photoBooth;
     photoBooth.show();

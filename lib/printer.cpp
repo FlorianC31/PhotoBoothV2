@@ -9,7 +9,7 @@ Printer::Printer(bool rotate) : m_rotate(rotate)
 }
 
 void Printer::print(QPixmap* photo, unsigned int nbPrint){
-    qDebug() << "nbPrint:" << nbPrint;
+    qDebug() << "PRINTER - nbPrint:" << nbPrint;
 
     QImage image = photo->toImage();
     QImage* finalImage = &image;

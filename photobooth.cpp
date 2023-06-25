@@ -31,6 +31,10 @@ PhotoBooth::PhotoBooth(QWidget *parent) :
 {
     m_ui->setupUi(this);
 
+    qDebug(" ");
+    qDebug(" ");
+    qDebug("########################## NEW SESSION #############################");
+
     // Connect all buttons
     QObject::connect(m_ui->veilleButton, &QPushButton::clicked, this, &PhotoBooth::showCam);
     QObject::connect(m_ui->buttonIncrease, &QPushButton::clicked, this, [=]() {PhotoBooth::updateNbPrint(+1);});
@@ -42,6 +46,7 @@ PhotoBooth::PhotoBooth(QWidget *parent) :
     QObject::connect(m_ui->buttonExit, &QPushButton::clicked, this, &PhotoBooth::exit);
 
     // Get the loading gif
+    qDebug() << "PHOTOBOOTH - Loading GIF exists:" << QFile(QString::fromUtf8("ressources/Spinner-1s-400px_white.gif")).exists();
     m_movie = new QMovie(QString::fromUtf8("ressources/Spinner-1s-400px_white.gif"));
     m_ui->loading->setMovie(m_movie);
     m_movie->start();
@@ -49,55 +54,55 @@ PhotoBooth::PhotoBooth(QWidget *parent) :
     startLoading();
 
     // Read the settings file
-    qDebug() << "READING SETTINGS FILE";
+    qDebug() << "PHOTOBOOTH - READING SETTINGS FILE";
     if (!readingSettingsFile()) {
         this->close();
     }
-    qDebug() << " -> Done";
+    qDebug() << "PHOTOBOOTH -  -> Done";
 
     // Setting display
-    qDebug() << "SETTING DISPLAY";
+    qDebug() << "PHOTOBOOTH - SETTING DISPLAY";
     settingDisplay();
-    qDebug() << " -> Done";
+    qDebug() << "PHOTOBOOTH -  -> Done";
 
     // Creation of all timers
-    qDebug() << "CREATION OF TIMERS";
+    qDebug() << "PHOTOBOOTH - CREATION OF TIMERS";
     m_countDownTimer = new QTimer(this);
     m_sleepTimer = new QTimer(this);
     m_remoteTimer = new QTimer(this);
     m_cameraTimer = new QTimer(this);
     connect(m_countDownTimer, &QTimer::timeout, this, &PhotoBooth::countDown);
     connect(m_sleepTimer, &QTimer::timeout, this, &PhotoBooth::goToSleep);
-    qDebug() << " -> Done";
+    qDebug() << "PHOTOBOOTH -  -> Done";
 
     // Creation of children objects    
-    qDebug() << "Loading of Photo";
+    qDebug() << "PHOTOBOOTH - Loading of Photo";
     m_photo = new Photo(this, m_photoFolder, m_isoMax, m_addWatermark, m_ui->viewer->size());
     connect(this, &PhotoBooth::loadLastPhoto, m_photo, &Photo::loadLast);
 
-    qDebug() << "Loading of CamTrigger";
+    qDebug() << "PHOTOBOOTH - Loading of CamTrigger";
     m_camTrigger = new CamTrigger(this, m_secondScreen);
     connect(m_remoteTimer, &QTimer::timeout, m_camTrigger, &CamTrigger::checkLoop);
     m_remoteTimer->start(CHECK_REMOTE_PERIOD);
 
-    qDebug() << "Loading of Camera";
+    qDebug() << "PHOTOBOOTH - Loading of Camera";
     m_camera = new Camera(this, m_ui->camView, m_cameraDevice, m_resolutionMode, m_upsideDown, m_mirror);
     connect(m_cameraTimer, &QTimer::timeout, m_camera, &Camera::loop);
     m_camera->connection();
 
-    qDebug() << "Loading of Relay";
+    qDebug() << "PHOTOBOOTH - Loading of Relay";
     settingRelayDevices();
 
-    qDebug() << "Loading of Printer";
+    qDebug() << "PHOTOBOOTH - Loading of Printer";
     m_printer = new Printer(m_upsideDown);
-    qDebug() << " -> Printer loaded";
+    qDebug() << "PHOTOBOOTH -  -> Printer loaded";
 
     // Setting children    
-    qDebug() << "SETTING CHILDREN OBJECTS";
+    qDebug() << "PHOTOBOOTH - SETTING CHILDREN OBJECTS";
     settingRelayDevices();
     connect(this, &PhotoBooth::focusSignal, m_camTrigger, &CamTrigger::focus);
     connect(this, &PhotoBooth::triggerSignal, m_camTrigger, &CamTrigger::trigger);
-    qDebug() << " -> Children objects set";
+    qDebug() << "PHOTOBOOTH -  -> Children objects set";
 
 }
 
@@ -134,10 +139,10 @@ bool PhotoBooth::readingSettingsFile()
 {
     // Check and open ini file
     if (!QFile(m_settingFile).exists()) {
-        qDebug() << "Error: The file " << QDir::currentPath() + "/" + m_settingFile << "doesn't exist.";
+        qDebug() << "PHOTOBOOTH - Error: The file " << QDir::currentPath() + "/" + m_settingFile << "doesn't exist.";
         return false;
     }
-    qDebug() << "Reading file " << QDir::currentPath() + "/" + m_settingFile;
+    qDebug() << "PHOTOBOOTH - Reading file " << QDir::currentPath() + "/" + m_settingFile;
     QSettings settings(m_settingFile, QSettings::IniFormat);
 
     // Read printer section
@@ -151,7 +156,7 @@ bool PhotoBooth::readingSettingsFile()
     m_isoMax = settings.value("isoMax").toUInt();
     m_photoFolder = settings.value("photoFolder").toString();
     if (m_photoFolder == "") {
-        qDebug() << "ERROR: photoFolder path is not setin the settings file.";
+        qDebug() << "PHOTOBOOTH - ERROR: photoFolder path is not setin the settings file.";
         return false;
     }
     m_addWatermark = settings.value("addWatermark").toBool();
@@ -340,7 +345,7 @@ void PhotoBooth::takePhoto()
  */
 void PhotoBooth::startLoading()
 {
-    qDebug() << "Start loading";
+    qDebug() << "PHOTOBOOTH - Start loading";
     m_ui->loading->show();
     m_ui->veilleButton->hide();
     m_ui->widgetPhoto->hide();
@@ -354,7 +359,8 @@ void PhotoBooth::startLoading()
  */
 void PhotoBooth::stopLoading()
 {
-    qDebug() << "Stop loading";
+    qDebug() << "PHOTOBOOTH - Stop loading";
+    m_ui->loading->hide();
     m_ui->compteur->show();
     showCam();
 }
@@ -380,7 +386,7 @@ void PhotoBooth::loadNewPhoto(QPixmap* lastPhoto, QPixmap* lastPhoto2Print)
     if (!m_lightOn) {
         // If the iso of the last photo are higher than max, turn on the light
         if (m_photo->checkIso()) {
-            qDebug() << "INFO : ISO >" << m_isoMax << "- Turning on light";
+            qDebug() << "PHOTOBOOTH - INFO : ISO >" << m_isoMax << "- Turning on light";
             m_lightOn = true;
             m_light->on();
         }
@@ -558,7 +564,7 @@ void PhotoBooth::settingRelayDevices()
     m_printerFan = new RelayDevice(m_relay, m_relaysConfig["printerFan"]);
     m_light = new RelayDevice(m_relay, m_relaysConfig["light"]);
     if(!m_relay->connection()){
-        qDebug() << "ERROR on relay connection";
+        qDebug() << "PHOTOBOOTH - ERROR on relay connection";
     }
 }
 
@@ -576,24 +582,24 @@ void PhotoBooth::endOfModuleLoading(PhotoBooth::Module module)
 {
     switch (module){
     case CAMERA:
-        qDebug() << " -> Camera loaded";
+        qDebug() << "PHOTOBOOTH -  -> Camera loaded";
         break;
     case CAM_TRIGGER:
-        qDebug() << " -> CamTrigger loaded";
+        qDebug() << "PHOTOBOOTH -  -> CamTrigger loaded";
         emit loadLastPhoto();
         break;
     case RELAY:
-        qDebug() << " -> Relay loaded";
+        qDebug() << "PHOTOBOOTH -  -> Relay loaded";
         break;
     case PHOTO:
-        qDebug() << " -> Photo loaded";
+        qDebug() << "PHOTOBOOTH -  -> Photo loaded";
         break;
     }
 
     if(m_camera != nullptr && m_camTrigger != nullptr && m_relay != nullptr && m_photo != nullptr) {
-        qDebug() << "Camera loaded:" << m_camera->isLoaded();
-        qDebug() << "CamTrigger loaded:" << m_camTrigger->isLoaded();
-        qDebug() << "Relay connected:" << m_relay->isConnected();
+        qDebug() << "PHOTOBOOTH - Camera loaded:" << m_camera->isLoaded();
+        qDebug() << "PHOTOBOOTH - CamTrigger loaded:" << m_camTrigger->isLoaded();
+        qDebug() << "PHOTOBOOTH - Relay connected:" << m_relay->isConnected();
 
         if (m_camera->isLoaded() && m_camTrigger->isLoaded() && m_relay->isConnected() && m_photo->isInitialized()) {
             stopLoading();

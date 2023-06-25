@@ -56,7 +56,7 @@ Camera::Camera(PhotoBooth* photoBooth, QLabel* camView, uint camId, uint resolut
     m_resolution[0] = resTable[resolutionMode][0];
     m_resolution[1] = resTable[resolutionMode][1];
 
-    qDebug() << "Resolution mode:" << resolutionMode << "- width=" << resTable[resolutionMode][0] << "- height=" << resTable[resolutionMode][1];
+    qDebug() << "CAMERA - Resolution mode:" << resolutionMode << "- width=" << resTable[resolutionMode][0] << "- height=" << resTable[resolutionMode][1];
 
     m_cropLeft =  round((RATIO_16_9 - RATIO_3_2) * m_resolution[1] / 2) + MARGIN;
     m_cropWidth = RATIO_3_2 * m_resolution[1] -  2 * MARGIN;
@@ -75,7 +75,7 @@ void Camera::connection()
         m_cap->open(m_camId);
 
         if (nbTries == 0) {
-            qDebug() << "ERROR: Impossible to connect to camera";
+            qDebug() << "CAMERA - ERROR: Impossible to connect to camera";
             return;
         }
 
@@ -114,7 +114,7 @@ void Camera::loop()
     (*m_cap) >> frame;
 
     if(frame.size().height == 0 || frame.size().width == 0) {
-        qDebug() << "ERROR: no frame captured on the camera";
+        qDebug() << "CAMERA - ERROR: no frame captured on the camera";
         return;
     }
 

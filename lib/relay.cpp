@@ -1,92 +1,99 @@
 #include "relay.h"
 #include <QDebug>
-#include <windows.h>
 #include <cmath>
 
 #define MAX_TRY_CONNECT 5       // Number of relay initial connection tries
-#define WAIT_TIME 2             // (secondes) Delay between 2 tries
+#define WAIT_TIME 5000          // (ms) Delay between 2 tries
 #define ELECTRICITY_FREQ 50     // (Hz) AC Electicity network frequency
 
 Relay::Relay(PhotoBooth* photoBooth, unsigned int deviceNumber) :
     m_photoBooth(photoBooth),
     m_isConnected(false),
-    m_ftHandle(nullptr),
     m_deviceNumber(deviceNumber)
 {
-    // Creation and initialisation of trigger thread
-    m_thread = new QThread();
-    m_thread->start();
-    this->moveToThread(m_thread);
+    FT_STATUS ftStatus;
+    qDebug() << "RELAY - Initialization of ftHandle:" << m_ftHandle;
 
-    connect(this, &Relay::endOfLoading, m_photoBooth, [this]() {
-        m_photoBooth->endOfModuleLoading(PhotoBooth::RELAY);
-    });
-}
-
-Relay::~Relay()
-{
-    m_thread->quit();
-    m_thread->wait();
-    delete m_thread;
-}
-
-bool Relay::connection()
-{
-    /*FT_STATUS ftStatus;
-
-    ftStatus = FT_Open(m_deviceNumber, m_ftHandle);
-
-    unsigned int nbTry = 1;
-    while (ftStatus != FT_OK && nbTry < MAX_TRY_CONNECT) {
-        QThread::msleep(WAIT_TIME * 1000);
-        ftStatus = FT_Open(m_deviceNumber, m_ftHandle);
-        nbTry++;
+    ftStatus = FT_Open(0, &m_ftHandle);
+    if(ftStatus == FT_OK){
+        qDebug() << "RELAY - Connected with ftHandle:" << m_ftHandle;
+        ftStatus = FT_SetBitMode(m_ftHandle, 0x0F, 1); // IMPORTANT TO HAVE: This sets up the FTDI device as "Bit Bang" mode
+        if(ftStatus == FT_OK){
+            qDebug() << "RELAY - Connection OK";
+            m_isConnected = true;
+        }
+        else{
+            qDebug() << "RELAY - Setting Bit Bang FAILED with code" << ftStatus;
+            m_isConnected = false;
+        }
     }
-
-    if (ftStatus != FT_OK) {
-        qDebug() << "RELAY - ERROR: Impossible to connect to relay after" << MAX_TRY_CONNECT << "tries;";
-        return false;
+    else{
+        qDebug() << "RELAY - Connection FAILED with code" << ftStatus;
+        m_isConnected = false;
     }
-
-    FT_SetBitMode(m_ftHandle, 0xFF, 0x01); // IMPORTANT TO HAVE: This sets up the FTDI device as "Bit Bang" mode
-    */
-    m_isConnected = true;
-    emit endOfLoading();
-    return true;
 }
 
-void Relay::set(unsigned char slotId, bool transition)
+Relay::~Relay(){
+    unsigned char zero = 0;
+    DWORD* lpdwBytesWritten = new DWORD;
+    FT_Write(m_ftHandle, &zero, 1, lpdwBytesWritten);
+}
+
+void Relay::set(unsigned char slotId, bool on, bool AC)
 {
-    unsigned char ucEnable;
+    if(m_isConnected){
+        unsigned char* data = new UCHAR;
+        FT_STATUS ftStatus;
+        ftStatus = FT_GetBitMode(m_ftHandle, data);
 
-    if (transition)
-        ucEnable = 8; // True -> 1111 -> 8
-    else
-        ucEnable = 0; // True -> 0000 -> 0
+        if (ftStatus != FT_OK){
+            return;
+        }
 
-    FT_SetBitMode(m_ftHandle, slotId, ucEnable);
-    // Sleep 1/4 of electricty AC cycle and redo action to be sure to avoid to activate relay when current = 0 which cause the non-locking of the relay (in millisecond)
-    QThread::msleep(1000 / ELECTRICITY_FREQ / 4);
-    FT_SetBitMode(m_ftHandle, slotId, ucEnable);
+        unsigned char newData;
+
+        if (on) {
+            newData = *data | slotId;
+        }
+        else {
+            newData = *data & ~slotId;
+        }
+
+        DWORD* lpdwBytesWritten = new DWORD;
+
+        qDebug() << "RELAY - Going from" << *data << "to" << newData;
+        FT_Write(m_ftHandle, &newData, 1, lpdwBytesWritten);
+        if (AC){
+            QThread::msleep(1000 / ELECTRICITY_FREQ / 4);
+            // Sleep 1/4 of electricty AC cycle and redo action to be sure to avoid to activate relay when current = 0 which cause the non-locking of the relay (in millisecond)
+            FT_Write(m_ftHandle, &newData, 1, lpdwBytesWritten);
+        }
+    }
 }
 
 
-RelayDevice::RelayDevice(Relay* relay, unsigned int port) :
+RelayDevice::RelayDevice(Relay* relay, QString name, unsigned int port, bool AC) :
     m_relay(relay),
-    m_port(port)
+    m_port(port),
+    m_name(name),
+    m_AC(AC)
 {
     // Get bit from port:
     // 1 -> 0001 -> 1
     // 2 -> 0010 -> 2
     // 3 -> 0100 -> 4
     // 4 -> 1000 -> 8
-    m_slotId = std::pow(2, port);
+    m_slotId = std::pow(2, port - 1);
+    qDebug() << "RELAY - Creation of" << m_name << "on port" << m_port << "- SlotId:" << m_slotId;
 }
 
-RelayDevice::~RelayDevice()
+void RelayDevice::on()
 {
-
+    qDebug() << "RELAY - Setting relay port" << m_port << "on";
+    m_relay->set(m_slotId, true, m_AC);
 }
-
-void RelayDevice::on() {m_relay->set(m_slotId, true);}
-void RelayDevice::off() {m_relay->set(m_slotId, false);}
+void RelayDevice::off()
+{
+    qDebug() << "RELAY - Setting relay port" << m_port << "off&";
+    m_relay->set(m_slotId, false, m_AC);
+ }

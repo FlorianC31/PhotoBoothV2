@@ -12,6 +12,7 @@
 #include "lib/photo.h"
 #include "lib/relay.h"
 #include "lib/printer.h"
+#include "lib/cputemp.h"
 
 
 QT_BEGIN_NAMESPACE
@@ -37,7 +38,6 @@ public:
     enum Module{
         CAM_TRIGGER,
         CAMERA,
-        RELAY,
         PHOTO
     };
 
@@ -47,6 +47,7 @@ private:
     CamTrigger* m_camTrigger;
     Photo* m_photo;
     Printer* m_printer;
+    CpuTemp* m_cpuTemp;
     QMovie* m_movie;
 
     enum State{
@@ -81,7 +82,7 @@ private:
     QTimer* m_sleepTimer;
     QTimer* m_remoteTimer;
     QTimer* m_cameraTimer;
-    QTimer* m_loadingTimer;
+    QTimer* m_cpuTimer;
     int m_count;
 
     QString m_font;

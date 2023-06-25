@@ -3,6 +3,7 @@
 #include "lib/utils.h"
 
 #define CHECK_REMOTE_PERIOD 1000 //ms
+#define CHECK_CPU_TEMP_PERIOD 1000 //ms
 
 /**
  * @brief PhotoBooth::PhotoBooth Main photobooth window class
@@ -15,6 +16,7 @@ PhotoBooth::PhotoBooth(QWidget *parent) :
     m_camTrigger(nullptr),
     m_photo(nullptr),
     m_printer(nullptr),
+    m_cpuTemp(nullptr),
     m_movie(nullptr),
     m_settingFile("settings.ini"),
     m_state(INIT),
@@ -22,7 +24,7 @@ PhotoBooth::PhotoBooth(QWidget *parent) :
     m_sleepTimer(nullptr),
     m_remoteTimer(nullptr),
     m_cameraTimer(nullptr),
-    m_loadingTimer(nullptr),
+    m_cpuTimer(nullptr),
     m_lightOn(false),
     m_relay(nullptr),
     m_pcFan(nullptr),
@@ -46,7 +48,6 @@ PhotoBooth::PhotoBooth(QWidget *parent) :
     QObject::connect(m_ui->buttonExit, &QPushButton::clicked, this, &PhotoBooth::exit);
 
     // Get the loading gif
-    qDebug() << "PHOTOBOOTH - Loading GIF exists:" << QFile(QString::fromUtf8("ressources/Spinner-1s-400px_white.gif")).exists();
     m_movie = new QMovie(QString::fromUtf8("ressources/Spinner-1s-400px_white.gif"));
     m_ui->loading->setMovie(m_movie);
     m_movie->start();
@@ -71,6 +72,7 @@ PhotoBooth::PhotoBooth(QWidget *parent) :
     m_sleepTimer = new QTimer(this);
     m_remoteTimer = new QTimer(this);
     m_cameraTimer = new QTimer(this);
+    m_cpuTimer = new QTimer(this);
     connect(m_countDownTimer, &QTimer::timeout, this, &PhotoBooth::countDown);
     connect(m_sleepTimer, &QTimer::timeout, this, &PhotoBooth::goToSleep);
     qDebug() << "PHOTOBOOTH -  -> Done";
@@ -92,14 +94,20 @@ PhotoBooth::PhotoBooth(QWidget *parent) :
 
     qDebug() << "PHOTOBOOTH - Loading of Relay";
     settingRelayDevices();
+    qDebug() << "PHOTOBOOTH -  -> Relay loaded";
 
     qDebug() << "PHOTOBOOTH - Loading of Printer";
     m_printer = new Printer(m_upsideDown);
     qDebug() << "PHOTOBOOTH -  -> Printer loaded";
 
+    qDebug() << "PHOTOBOOTH - Loading of CpuTemp";
+    m_cpuTemp = new CpuTemp(m_pcFan);
+    connect(m_cpuTimer, &QTimer::timeout, m_cpuTemp, &CpuTemp::loop);
+    m_cpuTimer->start(CHECK_CPU_TEMP_PERIOD);
+    qDebug() << "PHOTOBOOTH -  -> CpuTemp loaded";
+
     // Setting children    
     qDebug() << "PHOTOBOOTH - SETTING CHILDREN OBJECTS";
-    settingRelayDevices();
     connect(this, &PhotoBooth::focusSignal, m_camTrigger, &CamTrigger::focus);
     connect(this, &PhotoBooth::triggerSignal, m_camTrigger, &CamTrigger::trigger);
     qDebug() << "PHOTOBOOTH -  -> Children objects set";
@@ -118,11 +126,12 @@ PhotoBooth::~PhotoBooth()
     delete m_sleepTimer;
     delete m_remoteTimer;
     delete m_cameraTimer;
-    delete m_loadingTimer;
+    delete m_cpuTimer;
 
     delete m_camera;
     delete m_photo;
     delete m_printer;
+    delete m_cpuTemp;
     delete m_relay;
     delete m_pcFan;
     delete m_printerFan;
@@ -560,12 +569,11 @@ void PhotoBooth::countDown()
 void PhotoBooth::settingRelayDevices()
 {
     m_relay = new Relay(this, m_relayDevice);
-    m_pcFan = new RelayDevice(m_relay, m_relaysConfig["pcFan"]);
-    m_printerFan = new RelayDevice(m_relay, m_relaysConfig["printerFan"]);
-    m_light = new RelayDevice(m_relay, m_relaysConfig["light"]);
-    if(!m_relay->connection()){
-        qDebug() << "PHOTOBOOTH - ERROR on relay connection";
-    }
+    m_pcFan = new RelayDevice(m_relay, "pcFan", m_relaysConfig["pcFan"]);
+    m_printerFan = new RelayDevice(m_relay, "printerFan", m_relaysConfig["printerFan"]);
+    m_light = new RelayDevice(m_relay, "light", m_relaysConfig["light"], true);
+    m_pcFan->on();
+    m_printerFan->on();
 }
 
 void PhotoBooth::showFlash(bool show)
@@ -588,20 +596,16 @@ void PhotoBooth::endOfModuleLoading(PhotoBooth::Module module)
         qDebug() << "PHOTOBOOTH -  -> CamTrigger loaded";
         emit loadLastPhoto();
         break;
-    case RELAY:
-        qDebug() << "PHOTOBOOTH -  -> Relay loaded";
-        break;
     case PHOTO:
         qDebug() << "PHOTOBOOTH -  -> Photo loaded";
         break;
     }
 
-    if(m_camera != nullptr && m_camTrigger != nullptr && m_relay != nullptr && m_photo != nullptr) {
+    if(m_camera != nullptr && m_camTrigger != nullptr && m_photo != nullptr) {
         qDebug() << "PHOTOBOOTH - Camera loaded:" << m_camera->isLoaded();
         qDebug() << "PHOTOBOOTH - CamTrigger loaded:" << m_camTrigger->isLoaded();
-        qDebug() << "PHOTOBOOTH - Relay connected:" << m_relay->isConnected();
 
-        if (m_camera->isLoaded() && m_camTrigger->isLoaded() && m_relay->isConnected() && m_photo->isInitialized()) {
+        if (m_camera->isLoaded() && m_camTrigger->isLoaded() && m_photo->isInitialized()) {
             stopLoading();
         }
     }

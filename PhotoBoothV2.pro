@@ -10,6 +10,7 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    lib/cputemp.cpp \
     lib/exif.cpp \
     lib/camera.cpp \
     lib/camtrigger.cpp \
@@ -21,6 +22,7 @@ SOURCES += \
     photobooth.cpp
 
 HEADERS += \
+    lib/cputemp.h \
     lib/exif.h \
     lib/camera.h \
     lib/camtrigger.h \

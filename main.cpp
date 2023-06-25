@@ -55,9 +55,10 @@ int main(int argc, char *argv[])
     freopen("CONOUT$", "w", stdout);
     freopen("CONOUT$", "w", stderr);*/
 
-    qInstallMessageHandler(messageHandler);
+    //qInstallMessageHandler(messageHandler);
 
     PhotoBooth photoBooth;
     photoBooth.show();
     return a.exec();
+
 }

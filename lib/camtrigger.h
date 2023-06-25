@@ -33,7 +33,8 @@ private:
         G,
         AND,
         CTRL,
-        ENTER
+        ENTER,
+        DOWN
     };
 
     enum State{
@@ -66,7 +67,6 @@ private:
     void okDisconnect();
     void closeLiveView();
     void click(int x, int y);
-    void printSize();
     void show() {activate();};
     void pressKey(KEY key) {keyboard(key, 0);};
     void releaseKey(KEY key) {keyboard(key, KEYEVENTF_KEYUP);};

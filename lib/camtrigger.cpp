@@ -103,17 +103,6 @@ bool CamTrigger::checkSize(int w, int h)
     return (w == 0 || abs(windowWidth - w) <= SIZE_MARGIN) && (h == 0 || abs(windowHeight - h) <= SIZE_MARGIN);
 }
 
-void CamTrigger::printSize()
-{
-    if (!isOpen())
-        return;
-    RECT windowRect;
-    GetWindowRect(m_handle, &windowRect);
-    int windowWidth = windowRect.right - windowRect.left;
-    int windowHeight = windowRect.bottom - windowRect.top;
-    qDebug() << "Size of" << m_title.c_str() << ": width =" << windowWidth << "- height =" << windowHeight;
-}
-
 void CamTrigger::click(int x, int y)
 {
     if (!isOpen())
@@ -175,6 +164,9 @@ void CamTrigger::keyboard(KEY key, DWORD action)
         break;
     case ENTER:
         keybd_event(VK_RETURN, 0x9c, action ,0);
+        break;
+    case DOWN:
+        keybd_event(VK_DOWN, 0x9c, action ,0);
         break;
     }
 }
@@ -338,7 +330,8 @@ void CamTrigger::loadCamera()
     qDebug() << "Load camera";
     QThread::msleep(2000); // Wait 2000ms to let time to PreRemote to show
     m_tempo = 0;
-    click(120, 75);
+    click(220, 75);
+    pressKey(DOWN);
     pressKey(ENTER);
     m_state = CAMERA_LOADING;
 }

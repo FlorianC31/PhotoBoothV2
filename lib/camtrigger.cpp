@@ -185,7 +185,7 @@ void CamTrigger::move(bool back)
     else
     {
         SetWindowPos(m_handle, 0, m_initXPos + MOVE_DISTANCE, windowRect.top, windowRect.right - windowRect.left, windowRect.bottom - windowRect.top, SWP_NOZORDER | SWP_NOACTIVATE);
-        qDebug() << "CAMTRIGGER -" << m_title.c_str() << "moved to x =" << m_initXPos + MOVE_DISTANCE;
+        //qDebug() << "CAMTRIGGER -" << m_title.c_str() << "moved to x =" << m_initXPos + MOVE_DISTANCE;
     }
 }
 

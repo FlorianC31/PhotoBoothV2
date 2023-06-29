@@ -51,11 +51,9 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
-    /*AllocConsole();
-    freopen("CONOUT$", "w", stdout);
-    freopen("CONOUT$", "w", stderr);*/
-
-    //qInstallMessageHandler(messageHandler);
+#ifndef QT_DEBUG
+    qInstallMessageHandler(messageHandler);
+#endif
 
     PhotoBooth photoBooth;
     photoBooth.show();

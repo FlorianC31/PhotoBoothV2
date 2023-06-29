@@ -1,3 +1,4 @@
+#pragma once
 #ifndef CPUTEMP_H
 #define CPUTEMP_H
 
@@ -11,12 +12,15 @@ class CpuTemp : public QObject
     Q_OBJECT
 
 public:
-    CpuTemp(RelayDevice* cpuFan);
+    CpuTemp(RelayDevice* cpuFan, int minTemp, int maxTemp);
     ~CpuTemp();
 
 private:
     QThread* m_thread;
     RelayDevice* m_cpuFan;
+    bool m_fanRunning;
+    int m_minTemp;
+    int m_maxTemp;
 
 public slots:
     void loop();

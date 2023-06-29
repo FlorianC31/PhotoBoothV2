@@ -14,7 +14,6 @@
 #include "lib/printer.h"
 #include "lib/cputemp.h"
 
-
 QT_BEGIN_NAMESPACE
 namespace Ui { class PhotoBooth; }
 QT_END_NAMESPACE
@@ -24,7 +23,7 @@ class CamTrigger;
 class Relay;
 class RelayDevice;
 class Photo;
-
+class CpuTemp;
 
 class PhotoBooth : public QWidget
 {
@@ -70,6 +69,8 @@ private:
     bool m_modeDev;
     bool m_fullScreen;
     bool m_secondScreen;
+    int m_maxTemp;
+    int m_minTemp;
     QString m_photoFolder;
     uint m_fps;
     uint m_relayDevice;

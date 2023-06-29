@@ -101,7 +101,7 @@ PhotoBooth::PhotoBooth(QWidget *parent) :
     qDebug() << "PHOTOBOOTH -  -> Printer loaded";
 
     qDebug() << "PHOTOBOOTH - Loading of CpuTemp";
-    m_cpuTemp = new CpuTemp(m_pcFan);
+    m_cpuTemp = new CpuTemp(m_pcFan, m_minTemp, m_maxTemp);
     connect(m_cpuTimer, &QTimer::timeout, m_cpuTemp, &CpuTemp::loop);
     m_cpuTimer->start(CHECK_CPU_TEMP_PERIOD);
     qDebug() << "PHOTOBOOTH -  -> CpuTemp loaded";
@@ -193,6 +193,12 @@ bool PhotoBooth::readingSettingsFile()
     m_modeDev = settings.value("modeDev").toBool();
     m_fullScreen = settings.value("fullScreen").toBool();
     m_secondScreen = settings.value("secondScreen").toBool();
+    settings.endArray();
+
+    // read cpuTemp section
+    settings.beginReadArray("cpuTemp");
+    m_maxTemp = settings.value("maxTemp").toInt();
+    m_minTemp = settings.value("minTemp").toInt();
     settings.endArray();
 
     // read HMI section

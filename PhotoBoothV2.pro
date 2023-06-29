@@ -47,6 +47,7 @@ INCLUDEPATH += $$PWD/lib/ftd2xx
 DEPENDPATH += $$PWD/lib/ftd2xx
 
 DISTFILES += \
+    lib/getCpuTemp.py \
     readme.MD \
     settings.ini
 

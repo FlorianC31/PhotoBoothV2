@@ -328,6 +328,10 @@ void PhotoBooth::showCam()
     m_camera->start();
     m_cameraTimer->start(1000/m_fps);
 
+    if (m_lightOn) {
+        m_light->on();
+    }
+
     m_state = SHOWING_CAM;
 }
 
@@ -426,6 +430,9 @@ void PhotoBooth::goToSleep()
 {
     m_sleepTimer->stop();
     m_ui->veilleButton->show();
+    if (m_lightOn) {
+        m_light->off();
+    }
 }
 
 
@@ -578,8 +585,6 @@ void PhotoBooth::settingRelayDevices()
     m_pcFan = new RelayDevice(m_relay, "pcFan", m_relaysConfig["pcFan"]);
     m_printerFan = new RelayDevice(m_relay, "printerFan", m_relaysConfig["printerFan"]);
     m_light = new RelayDevice(m_relay, "light", m_relaysConfig["light"], true);
-    m_pcFan->on();
-    m_printerFan->on();
 }
 
 void PhotoBooth::showFlash(bool show)

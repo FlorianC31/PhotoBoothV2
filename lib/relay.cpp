@@ -61,7 +61,6 @@ void Relay::set(unsigned char slotId, bool on, bool AC)
 
         DWORD* lpdwBytesWritten = new DWORD;
 
-        qDebug() << "RELAY - Going from" << *data << "to" << newData;
         FT_Write(m_ftHandle, &newData, 1, lpdwBytesWritten);
         if (AC){
             QThread::msleep(1000 / ELECTRICITY_FREQ / 4);
@@ -89,11 +88,11 @@ RelayDevice::RelayDevice(Relay* relay, QString name, unsigned int port, bool AC)
 
 void RelayDevice::on()
 {
-    qDebug() << "RELAY - Setting relay port" << m_port << "on";
+    qDebug() << "RELAY - Setting" << m_name << "on";
     m_relay->set(m_slotId, true, m_AC);
 }
 void RelayDevice::off()
 {
-    qDebug() << "RELAY - Setting relay port" << m_port << "off&";
+    qDebug() << "RELAY - Setting" << m_name << "off";
     m_relay->set(m_slotId, false, m_AC);
  }

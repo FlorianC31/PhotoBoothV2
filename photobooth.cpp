@@ -324,6 +324,7 @@ void PhotoBooth::showCam()
     m_ui->widgetPhoto->show();
     m_ui->veilleButton->hide();
     m_ui->widgetPrint->hide();
+    m_ui->compteur->show();
 
     m_camera->start();
     m_cameraTimer->start(1000/m_fps);
@@ -380,7 +381,6 @@ void PhotoBooth::stopLoading()
 {
     qDebug() << "PHOTOBOOTH - Stop loading";
     m_ui->loading->hide();
-    m_ui->compteur->show();
     showCam();
 }
 
@@ -418,6 +418,7 @@ void PhotoBooth::loadNewPhoto(QPixmap* lastPhoto, QPixmap* lastPhoto2Print)
     updateNbPrint(0);
     m_ui->widgetPrint->show();
     m_ui->loading->hide();
+    m_ui->compteur->show();
 
     m_sleepTimer->start(60000);
 }

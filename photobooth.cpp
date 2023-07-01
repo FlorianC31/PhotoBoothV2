@@ -25,6 +25,7 @@ PhotoBooth::PhotoBooth(QWidget *parent) :
     m_remoteTimer(nullptr),
     m_cameraTimer(nullptr),
     m_cpuTimer(nullptr),
+    m_printTimer(nullptr),
     m_lightOn(false),
     m_relay(nullptr),
     m_pcFan(nullptr),
@@ -73,8 +74,10 @@ PhotoBooth::PhotoBooth(QWidget *parent) :
     m_remoteTimer = new QTimer(this);
     m_cameraTimer = new QTimer(this);
     m_cpuTimer = new QTimer(this);
+    m_printTimer = new QTimer(this);
     connect(m_countDownTimer, &QTimer::timeout, this, &PhotoBooth::countDown);
     connect(m_sleepTimer, &QTimer::timeout, this, &PhotoBooth::goToSleep);
+    connect(m_printTimer, &QTimer::timeout, this, &PhotoBooth::endOfPrintFan);
     qDebug() << "PHOTOBOOTH -  -> Done";
 
     // Creation of children objects    
@@ -127,6 +130,7 @@ PhotoBooth::~PhotoBooth()
     delete m_remoteTimer;
     delete m_cameraTimer;
     delete m_cpuTimer;
+    delete m_printTimer;
 
     delete m_camera;
     delete m_photo;
@@ -158,6 +162,7 @@ bool PhotoBooth::readingSettingsFile()
     settings.beginReadArray("printer");
     m_printCounter = settings.value("counter").toUInt();
     m_nbPrintMax = settings.value("nbPrintMax").toUInt();
+    m_fanTime = settings.value("fanTime").toUInt();
     settings.endArray();
 
     // Read photo section
@@ -165,7 +170,7 @@ bool PhotoBooth::readingSettingsFile()
     m_isoMax = settings.value("isoMax").toUInt();
     m_photoFolder = settings.value("photoFolder").toString();
     if (m_photoFolder == "") {
-        qDebug() << "PHOTOBOOTH - ERROR: photoFolder path is not setin the settings file.";
+        qDebug() << "PHOTOBOOTH - ERROR: photoFolder path is not set in the settings file.";
         return false;
     }
     m_addWatermark = settings.value("addWatermark").toBool();
@@ -530,6 +535,9 @@ void PhotoBooth::print()
     // send photo to printer
     m_printer->print(m_lastPhoto2Print, m_nbPrint);
 
+    // start printer fan
+    m_printTimer->start(m_nbPrint * 1000 * m_fanTime);
+
     // update print counter
     m_printCounter -= m_nbPrint;
     m_ui->compteur->setText(QString::number(m_printCounter));
@@ -621,4 +629,9 @@ void PhotoBooth::endOfModuleLoading(PhotoBooth::Module module)
             stopLoading();
         }
     }
+}
+
+void PhotoBooth::endOfPrintFan()
+{
+    m_printerFan->off();
 }

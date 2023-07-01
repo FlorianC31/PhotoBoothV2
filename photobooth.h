@@ -24,6 +24,7 @@ class Relay;
 class RelayDevice;
 class Photo;
 class CpuTemp;
+class Printer;
 
 class PhotoBooth : public QWidget
 {
@@ -62,6 +63,7 @@ private:
     State m_state;
     uint m_nbPrint;
     uint m_nbPrintMax;
+    uint m_fanTime;
     uint m_isoMax;
     bool m_upsideDown;
     bool m_mirror;
@@ -84,6 +86,7 @@ private:
     QTimer* m_remoteTimer;
     QTimer* m_cameraTimer;
     QTimer* m_cpuTimer;
+    QTimer* m_printTimer;
     int m_count;
 
     QString m_font;
@@ -122,6 +125,7 @@ private:
 private slots:
     void countDown();
     void goToSleep();
+    void endOfPrintFan();
 
 public slots:
     void startLoading();

@@ -77,7 +77,7 @@ private:
     uint m_cameraDevice;
     uint m_resolutionMode;
     QPixmap* m_lastPhoto;
-    QPixmap* m_lastPhoto2Print;
+    QString m_lastPhoto2Print;
 
     QTimer* m_countDownTimer;
     QTimer* m_sleepTimer;
@@ -127,7 +127,7 @@ public slots:
     void startLoading();
     void stopLoading();
     void endOfModuleLoading(PhotoBooth::Module module);
-    void loadNewPhoto(QPixmap* lastPhoto, QPixmap* lastPhoto2Print);
+    void loadNewPhoto(QPixmap* lastPhoto, QString lastPhoto2Print);
 
 signals:
     void initSignal(bool secondScreen);

@@ -12,11 +12,9 @@ Relay::Relay(PhotoBooth* photoBooth, unsigned int deviceNumber) :
     m_deviceNumber(deviceNumber)
 {
     FT_STATUS ftStatus;
-    qDebug() << "RELAY - Initialization of ftHandle:" << m_ftHandle;
 
     ftStatus = FT_Open(0, &m_ftHandle);
     if(ftStatus == FT_OK){
-        qDebug() << "RELAY - Connected with ftHandle:" << m_ftHandle;
         ftStatus = FT_SetBitMode(m_ftHandle, 0x0F, 1); // IMPORTANT TO HAVE: This sets up the FTDI device as "Bit Bang" mode
         if(ftStatus == FT_OK){
             qDebug() << "RELAY - Connection OK";

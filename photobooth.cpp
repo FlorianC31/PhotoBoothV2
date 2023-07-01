@@ -79,7 +79,7 @@ PhotoBooth::PhotoBooth(QWidget *parent) :
 
     // Creation of children objects    
     qDebug() << "PHOTOBOOTH - Loading of Photo";
-    m_photo = new Photo(this, m_photoFolder, m_isoMax, m_addWatermark, m_ui->viewer->size());
+    m_photo = new Photo(this, m_photoFolder, m_isoMax, m_ui->viewer->size());
     connect(this, &PhotoBooth::loadLastPhoto, m_photo, &Photo::loadLast);
 
     qDebug() << "PHOTOBOOTH - Loading of CamTrigger";
@@ -97,7 +97,7 @@ PhotoBooth::PhotoBooth(QWidget *parent) :
     qDebug() << "PHOTOBOOTH -  -> Relay loaded";
 
     qDebug() << "PHOTOBOOTH - Loading of Printer";
-    m_printer = new Printer(m_upsideDown);
+    m_printer = new Printer(m_upsideDown, m_addWatermark);
     qDebug() << "PHOTOBOOTH -  -> Printer loaded";
 
     qDebug() << "PHOTOBOOTH - Loading of CpuTemp";
@@ -388,7 +388,7 @@ void PhotoBooth::stopLoading()
 /**
  * @brief PhotoBooth::showPhoto show the last photo in the UI
  */
-void PhotoBooth::loadNewPhoto(QPixmap* lastPhoto, QPixmap* lastPhoto2Print)
+void PhotoBooth::loadNewPhoto(QPixmap* lastPhoto, QString lastPhoto2Print)
 {
     if (m_state == INIT){
         endOfModuleLoading(PHOTO);

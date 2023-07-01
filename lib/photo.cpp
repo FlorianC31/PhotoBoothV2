@@ -3,9 +3,6 @@
 
 #include <QDebug>
 
-#define PRINT_SIZE_W 6 // in inch
-#define PRINT_SIZE_H 4 // in inch
-#define RESOLUTION 300 // in dpi
 #define WATERMARK_RIGHT 20 // Distance in px from the right of the watermark to the right of the photo
 #define WATERMARK_BOTTOM 40 // Distance in px from the bottom of the watermark to the bottom of the photo
 
@@ -13,10 +10,9 @@
 #define TRIES_NUMBER 50 // Number of tries to get the last photo
 
 
-Photo::Photo(PhotoBooth* photoBooth, QString photoFolder, uint isoMax, bool addWatermark, QSize viewerSize) :
+Photo::Photo(PhotoBooth* photoBooth, QString photoFolder, uint isoMax, QSize viewerSize) :
     m_photoBooth(photoBooth),
     m_isoMax(isoMax),
-    m_addWatermark(addWatermark),
     m_viewerSize(viewerSize),
     m_intialized(false)
 {
@@ -25,23 +21,11 @@ Photo::Photo(PhotoBooth* photoBooth, QString photoFolder, uint isoMax, bool addW
     this->moveToThread(m_thread);
 
     connect(this, &Photo::sendNewPhoto, m_photoBooth, [this]() {
-        m_photoBooth->loadNewPhoto(&m_lastPhoto, &m_lastPhoto2Print);
+        m_photoBooth->loadNewPhoto(&m_lastPhoto, m_pathToRecentFile);
     });
 
     m_folder = QDir(photoFolder);
     m_pathToRecentFile = getLastJpg();
-
-    if (m_addWatermark) {
-        // Load the watermark image into another QPixmap object
-        m_watermarkPng = QPixmap(QString::fromUtf8("ressources/logo_blanc_sur_transparent.png"));
-
-        // Calculation of the watermak position
-        int posX = PRINT_SIZE_W * RESOLUTION - m_watermarkPng.size().width() - WATERMARK_RIGHT;
-        int posY = PRINT_SIZE_H * RESOLUTION - m_watermarkPng.size().height() - WATERMARK_BOTTOM;
-        m_watermarkPos = QPoint(posX, posY);
-    }
-
-    m_resizedPhotoSize = QSize(PRINT_SIZE_W * RESOLUTION, PRINT_SIZE_H * RESOLUTION);
 }
 
 
@@ -74,13 +58,6 @@ void Photo::loadLast()
     // Get the last photo
     QPixmap newPhoto(m_pathToRecentFile);
 
-    // Resize the photo
-    m_lastPhoto2Print = newPhoto.scaled(m_resizedPhotoSize);
-
-    if (m_addWatermark) {
-        m_lastPhoto2Print = pasteWatermark(m_lastPhoto2Print);
-    }
-
     // Return the final photo
     m_lastPhoto = newPhoto.scaled(m_viewerSize);
 
@@ -105,26 +82,6 @@ QString Photo::getLastJpg()
     qDebug() << "PHOTO - Photo Folder is empty";
     return "";
  }
-
-/**
- * @brief Photo::addWatermark add the watermark on the photo
- * @param photo reference to the photo where the watermak has to be added
- */
-QPixmap Photo::pasteWatermark(QPixmap &photo)
-{
-    QPixmap result(photo.width(), photo.height());
-    result.fill(Qt::transparent); // force alpha channel
-
-    // Create a QPainter object to draw on the image
-    QPainter painter(&result);
-
-    // Draw the watermark image on the original image
-    painter.drawPixmap(0, 0, photo);
-    painter.drawPixmap(m_watermarkPos, m_watermarkPng);
-    painter.end();
-    return result;
-}
-
 
 /**
  * @brief Photo::checkIso check if Iso are higher than max

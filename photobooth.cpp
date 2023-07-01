@@ -100,7 +100,10 @@ PhotoBooth::PhotoBooth(QWidget *parent) :
     qDebug() << "PHOTOBOOTH -  -> Relay loaded";
 
     qDebug() << "PHOTOBOOTH - Loading of Printer";
-    m_printer = new Printer(m_upsideDown, m_addWatermark);
+    m_printer = new Printer(m_upsideDown, m_addWatermark, m_settingFile);
+    connect(this, &PhotoBooth::send2printer, m_printer, [this]() {
+        m_printer->print(m_lastPhoto2Print, m_nbPrint, m_printCounter);
+    });
     qDebug() << "PHOTOBOOTH -  -> Printer loaded";
 
     qDebug() << "PHOTOBOOTH - Loading of CpuTemp";
@@ -447,6 +450,7 @@ void PhotoBooth::goToSleep()
  */
 void PhotoBooth::exit()
 {
+    qDebug() << "PHOTOBOOTH - Close";
     this->close();
 }
 
@@ -532,22 +536,18 @@ void PhotoBooth::print()
     if (m_printCounter ==0)
         return;
 
-    // send photo to printer
-    m_printer->print(m_lastPhoto2Print, m_nbPrint);
-
-    // start printer fan
-    m_printTimer->start(m_nbPrint * 1000 * m_fanTime);
-
     // update print counter
     m_printCounter -= m_nbPrint;
-    m_ui->compteur->setText(QString::number(m_printCounter));
 
-    // update print counter in settings.ini file
-    QSettings settings(m_settingFile, QSettings::IniFormat);
-    settings.beginReadArray("printer");
-    settings.setValue("counter", m_printCounter);
-    settings.endArray();
-    settings.sync();
+    // send photo to printer
+    emit send2printer();
+
+    // start printer fan and start the timer to turn of it
+    qDebug() << "PHOTOBOOTH - Start fan printer for" << (m_nbPrint * m_fanTime) << "seconds";
+    m_printerFan->on();
+    m_printTimer->start(m_nbPrint * m_fanTime * 1000);
+
+    m_ui->compteur->setText(QString::number(m_printCounter));
 
     // go back to showing cam
     showCam();
@@ -634,4 +634,5 @@ void PhotoBooth::endOfModuleLoading(PhotoBooth::Module module)
 void PhotoBooth::endOfPrintFan()
 {
     m_printerFan->off();
+    m_printTimer->stop();
 }

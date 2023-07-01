@@ -141,6 +141,7 @@ signals:
     void showLookUpSignal();
     void hideLookUpSignal();
     void loadLastPhoto();
+    void send2printer();
 };
 
 #endif // PhotoBooth_H

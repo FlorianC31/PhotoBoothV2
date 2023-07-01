@@ -16,7 +16,6 @@ public:
     ~Relay();
 
     bool isConnected() { return m_isConnected;};
-    //FT_HANDLE* getFtHandle() { return m_ftHandle;};
     void set(unsigned char slotId, bool on, bool AC);
 
 private:

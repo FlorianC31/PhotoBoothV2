@@ -17,7 +17,7 @@ class Photo : public QObject
     Q_OBJECT
 
 public:
-    Photo(PhotoBooth* photoBooth, QString photoFolder, uint isoMax, QSize viewerSize);
+    Photo(PhotoBooth* photoBooth, QString photoFolder, uint isoMax, QSize viewerSize, bool rotate);
     ~Photo();
     bool checkIso();
     inline bool isInitialized() {return m_intialized;};
@@ -33,6 +33,7 @@ private:
     QSize m_viewerSize;
     QPixmap m_lastPhoto;
     bool m_intialized;
+    bool m_rotate;
 
 public slots:
     void loadLast();

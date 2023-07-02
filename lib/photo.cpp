@@ -10,11 +10,12 @@
 #define TRIES_NUMBER 50 // Number of tries to get the last photo
 
 
-Photo::Photo(PhotoBooth* photoBooth, QString photoFolder, uint isoMax, QSize viewerSize) :
+Photo::Photo(PhotoBooth* photoBooth, QString photoFolder, uint isoMax, QSize viewerSize, bool rotate) :
     m_photoBooth(photoBooth),
     m_isoMax(isoMax),
     m_viewerSize(viewerSize),
-    m_intialized(false)
+    m_intialized(false),
+    m_rotate(rotate)
 {
     m_thread = new QThread();
     m_thread->start();
@@ -59,7 +60,14 @@ void Photo::loadLast()
     QPixmap newPhoto(m_pathToRecentFile);
 
     // Return the final photo
-    m_lastPhoto = newPhoto.scaled(m_viewerSize);
+    if (m_rotate) {
+        QTransform transform;
+        transform.rotate(180);
+        m_lastPhoto = newPhoto.scaled(m_viewerSize).transformed(QTransform().rotate(180));
+    }
+    else {
+        m_lastPhoto = newPhoto.scaled(m_viewerSize);
+    }
 
     m_intialized = true;
     emit sendNewPhoto();

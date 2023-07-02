@@ -73,11 +73,16 @@ private:
     bool m_secondScreen;
     int m_maxTemp;
     int m_minTemp;
+    double m_cpuTempPeriod;
+    double m_startTime;
+    double m_preFocusTime;
+    double m_loopUpTime;
     QString m_photoFolder;
     uint m_fps;
     uint m_relayDevice;
     uint m_cameraDevice;
     uint m_resolutionMode;
+    double m_triggerPeriod;
     QPixmap* m_lastPhoto;
     QString m_lastPhoto2Print;
 
@@ -89,8 +94,11 @@ private:
     QTimer* m_printTimer;
     int m_count;
 
-    QString m_font;
-    double m_fontSizeRatio;
+    QString m_font1;
+    QString m_font2;
+    double m_font1SizeRatio;
+    double m_font1SizeRatio2;
+    double m_font2SizeRatio;
     QString m_styleSheet;
     QMap<QString, uint> m_relaysConfig;
 
@@ -105,8 +113,8 @@ private:
     void exit();
 
     bool generateStyleSheet(QString backGroundColor1, QString backGroundColor2, QString fontColor);
-    void updateFont(QLabel* label);
-    void updateFont(QPushButton* button);
+    void updateFont(QLabel* label, QString fontLabel, double fontSizeRatio);
+    void updateFont(QPushButton* button, QString fontLabel, double fontSizeRatio);
     void updateNbPrint(int increment);
     void btnActivate(QPushButton* button);
     void btnDisable(QPushButton* button);

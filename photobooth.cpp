@@ -2,9 +2,6 @@
 #include "ui_PhotoBooth.h"
 #include "lib/utils.h"
 
-#define CHECK_REMOTE_PERIOD 1000 //ms
-#define CHECK_CPU_TEMP_PERIOD 1000 //ms
-
 /**
  * @brief PhotoBooth::PhotoBooth Main photobooth window class
  * @param parent parent QApplication
@@ -82,13 +79,13 @@ PhotoBooth::PhotoBooth(QWidget *parent) :
 
     // Creation of children objects    
     qDebug() << "PHOTOBOOTH - Loading of Photo";
-    m_photo = new Photo(this, m_photoFolder, m_isoMax, m_ui->viewer->size());
+    m_photo = new Photo(this, m_photoFolder, m_isoMax, m_ui->viewer->size(), m_upsideDown);
     connect(this, &PhotoBooth::loadLastPhoto, m_photo, &Photo::loadLast);
 
     qDebug() << "PHOTOBOOTH - Loading of CamTrigger";
     m_camTrigger = new CamTrigger(this, m_secondScreen);
     connect(m_remoteTimer, &QTimer::timeout, m_camTrigger, &CamTrigger::checkLoop);
-    m_remoteTimer->start(CHECK_REMOTE_PERIOD);
+    m_remoteTimer->start(1000 * m_triggerPeriod);
 
     qDebug() << "PHOTOBOOTH - Loading of Camera";
     m_camera = new Camera(this, m_ui->camView, m_cameraDevice, m_resolutionMode, m_upsideDown, m_mirror);
@@ -109,7 +106,7 @@ PhotoBooth::PhotoBooth(QWidget *parent) :
     qDebug() << "PHOTOBOOTH - Loading of CpuTemp";
     m_cpuTemp = new CpuTemp(m_pcFan, m_minTemp, m_maxTemp);
     connect(m_cpuTimer, &QTimer::timeout, m_cpuTemp, &CpuTemp::loop);
-    m_cpuTimer->start(CHECK_CPU_TEMP_PERIOD);
+    m_cpuTimer->start(1000 * m_cpuTempPeriod);
     qDebug() << "PHOTOBOOTH -  -> CpuTemp loaded";
 
     // Setting children    
@@ -194,6 +191,7 @@ bool PhotoBooth::readingSettingsFile()
     m_mirror = settings.value("mirror").toBool();
     m_fps = settings.value("fps").toUInt();
     m_resolutionMode = settings.value("resolutionMode").toUInt();
+    m_triggerPeriod = settings.value("period").toDouble();
     settings.endArray();
 
     // read dev section
@@ -207,12 +205,23 @@ bool PhotoBooth::readingSettingsFile()
     settings.beginReadArray("cpuTemp");
     m_maxTemp = settings.value("maxTemp").toInt();
     m_minTemp = settings.value("minTemp").toInt();
+    m_cpuTempPeriod = settings.value("period").toDouble();
+    settings.endArray();
+
+    // read countdown section
+    settings.beginReadArray("countdown");
+    m_startTime = settings.value("start").toDouble();
+    m_preFocusTime = settings.value("preFocus").toDouble();
+    m_loopUpTime = settings.value("lookUp").toDouble();
     settings.endArray();
 
     // read HMI section
     settings.beginReadArray("HMI");
-    m_font = settings.value("font").toString();
-    m_fontSizeRatio = settings.value("fontSizeRatio").toDouble();
+    m_font1 = settings.value("font1").toString();
+    m_font2 = settings.value("font2").toString();
+    m_font1SizeRatio = settings.value("font1SizeRatio").toDouble();
+    m_font1SizeRatio2 = settings.value("font1SizeRatio2").toDouble();
+    m_font2SizeRatio = settings.value("font2SizeRatio").toDouble();
 
     QString backgroundColor1 = settings.value("backgroundColor1").toString();
     QString backgroundColor2 = settings.value("backgroundColor2").toString();
@@ -277,14 +286,14 @@ void PhotoBooth::settingDisplay()
     if (m_fullScreen)
         showFullScreen();
 
-    updateFont(m_ui->compteur);
-    updateFont(m_ui->countdown);
-    updateFont(m_ui->warning);
-    updateFont(m_ui->lookUp);
-    updateFont(m_ui->nbPrintLabel);
-    updateFont(m_ui->veilleButton);
-    updateFont(m_ui->buttonIncrease);
-    updateFont(m_ui->buttonDecrease);
+    updateFont(m_ui->compteur, m_font2, m_font2SizeRatio);
+    updateFont(m_ui->countdown, m_font2, m_font2SizeRatio);
+    updateFont(m_ui->warning, m_font2, m_font2SizeRatio);
+    updateFont(m_ui->lookUp, m_font1, m_font1SizeRatio);
+    updateFont(m_ui->nbPrintLabel, m_font2, m_font2SizeRatio);
+    updateFont(m_ui->veilleButton, m_font1, m_font1SizeRatio2);
+    updateFont(m_ui->buttonIncrease, m_font2, m_font2SizeRatio);
+    updateFont(m_ui->buttonDecrease, m_font2, m_font2SizeRatio);
 
     m_ui->background->setStyleSheet(m_styleSheet);
     m_ui->veilleButton->setStyleSheet(m_styleSheet);
@@ -295,11 +304,11 @@ void PhotoBooth::settingDisplay()
  * @brief PhotoBooth::updateFont update the font familly and size in a QLabel
  * @param label label where update the font
  */
-void PhotoBooth::updateFont(QLabel* label)
+void PhotoBooth::updateFont(QLabel* label, QString fontLabel, double fontSizeRatio)
 {
     QFont font = label->font();
-    font.setFamily(m_font);
-    font.setPointSize(font.pointSize() / m_fontSizeRatio);
+    font.setFamily(fontLabel);
+    font.setPointSize(font.pointSize() / fontSizeRatio);
     label->setFont(font);
 }
 
@@ -308,11 +317,11 @@ void PhotoBooth::updateFont(QLabel* label)
  * @brief PhotoBooth::updateFont update the font familly and size in a QPushButton
  * @param button button where update the font
  */
-void PhotoBooth::updateFont(QPushButton* button)
+void PhotoBooth::updateFont(QPushButton* button, QString fontLabel, double fontSizeRatio)
 {
     QFont font = button->font();
-    font.setFamily(m_font);
-    font.setPointSize(font.pointSize() / m_fontSizeRatio);
+    font.setFamily(fontLabel);
+    font.setPointSize(font.pointSize() / fontSizeRatio);
     button->setFont(font);
 }
 
@@ -322,10 +331,13 @@ void PhotoBooth::updateFont(QPushButton* button)
  */
 void PhotoBooth::showCam()
 {
+    qDebug() << "PHOTOBOOTH - Show camera";
     reinitSleep();
 
-    m_remoteTimer->start(CHECK_REMOTE_PERIOD);
+    qDebug() << "PHOTOBOOTH - Start remote check timer";
+    //m_remoteTimer->start(1000 * m_triggerPeriod);
 
+    qDebug() << "PHOTOBOOTH - Update UI";
     m_ui->lookUp->hide();
     m_ui->countdown->hide();
     m_ui->buttonPhoto->show();
@@ -334,6 +346,7 @@ void PhotoBooth::showCam()
     m_ui->widgetPrint->hide();
     m_ui->compteur->show();
 
+    qDebug() << "PHOTOBOOTH - Start camera";
     m_camera->start();
     m_cameraTimer->start(1000/m_fps);
 
@@ -356,7 +369,7 @@ void PhotoBooth::takePhoto()
     m_ui->lookUp->hide();
 
     // Countdown initialisation
-    m_count = 60;
+    m_count = int(m_startTime * 10);
     m_sleepTimer->stop();
     m_remoteTimer->stop();
     m_countDownTimer->start(100);
@@ -364,7 +377,6 @@ void PhotoBooth::takePhoto()
     m_ui->countdown->setText(QString::number(ceil(0.1*m_count)));
     m_ui->countdown->show();
     m_ui->buttonPhoto->hide();
-
 }
 
 
@@ -564,23 +576,21 @@ void PhotoBooth::countDown()
         m_ui->countdown->setText(QString::number(ceil(0.1*m_count)));
     }
 
-    switch (m_count) {
-    case 40:
+    if (m_count == (int(m_preFocusTime * 10))) {
         emit focusSignal();
-        break;
-    case 20:
+    }
+    else if (m_count == (int(m_loopUpTime * 10))) {
         m_ui->lookUp->show();
-        break;
-    case 0:
+    }
+    else if (m_count == 0) {
         m_ui->flash->show();
         emit triggerSignal();
-        break;
-    case -4:
+    }
+    else if (m_count == -4) {
         startLoading();
         m_ui->flash->hide();        
         emit loadLastPhoto();
         m_countDownTimer->stop();
-        break;
     }
 }
 

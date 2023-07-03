@@ -32,7 +32,8 @@ Camera::Camera(PhotoBooth* photoBooth, QLabel* camView, uint camId, uint resolut
     m_cap(nullptr),
     m_thread(nullptr),
     m_upsideDown(upsideDown),
-    m_mirror(mirror)
+    m_mirror(mirror),
+    isConnected(false)
 {
     m_thread = new QThread();
     m_thread->start();
@@ -71,7 +72,7 @@ void Camera::connection()
         nbTries--;
         QThread::msleep(SLEEP_TIME);
 
-        m_cap = new cv::VideoCapture(1, cv::CAP_DSHOW);
+        m_cap = new cv::VideoCapture(m_camId, cv::CAP_DSHOW);
         m_cap->open(m_camId);
 
         if (nbTries == 0) {
@@ -88,11 +89,14 @@ void Camera::connection()
     cv::Mat frame;
     (*m_cap) >> frame;
 
-    if(frame.size().height != m_resolution[1] || frame.size().width ==  m_resolution[0]) {
+    qDebug() << "CAMERA - Connected to camera device" << m_camId << "with resolution" << frame.size().width << "x" << frame.size().height;
+
+    if(frame.size().width != m_resolution[0] || frame.size().height != m_resolution[1]) {
         qDebug() << "CAMERA - ERROR: The resolution does not match the target - Check the camera device id";
         return;
     }
 
+    isConnected = true;
     emit endOfLoading();
 }
 
@@ -121,7 +125,7 @@ void Camera::loop()
     cv::Mat frame;
     (*m_cap) >> frame;
 
-    if(frame.size().height == 0 || frame.size().width == 0) {
+    if(frame.size().width == 0 || frame.size().height == 0) {
         qDebug() << "CAMERA - ERROR: no frame captured on the camera";
         return;
     }

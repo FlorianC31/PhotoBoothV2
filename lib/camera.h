@@ -20,7 +20,7 @@ class Camera : public QObject
 public:
     Camera(PhotoBooth* photobooth, QLabel* camView, uint camId, uint resolutionMode, bool upsideDown, bool mirror);
     ~Camera();
-    inline bool isLoaded() {return m_cap->isOpened();};
+    inline bool isLoaded() {return isConnected;};
 
     void connection();
     void start();
@@ -38,6 +38,7 @@ private:
     int m_cropWidth;
     bool m_upsideDown;
     bool m_mirror;
+    bool isConnected;
 
 public slots:
     void loop();

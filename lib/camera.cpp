@@ -64,28 +64,37 @@ Camera::Camera(PhotoBooth* photoBooth, QLabel* camView, uint camId, uint resolut
 }
 
 void Camera::connection()
-{
-    // Create a video capture object using the DirectShow backend
-    int nbTries = TRIES_NUMBER;
+{    
+    int deviceId = -1;
+    cv::Mat frame;
+    bool resolutionisOk = false;
+
+    // Try all the camera until finding the one with corresponding target resolution
     do {
-        nbTries--;
-        QThread::msleep(SLEEP_TIME);
+        deviceId++;
+        m_cap = new cv::VideoCapture(deviceId, cv::CAP_DSHOW);
+        m_cap->open(deviceId);
 
-        m_cap = new cv::VideoCapture(1, cv::CAP_DSHOW);
-        m_cap->open(m_camId);
+        if (m_cap->isOpened()) {
+            // Set resolution
+            m_cap->set(cv::CAP_PROP_FRAME_WIDTH, m_resolution[0]);
+            m_cap->set(cv::CAP_PROP_FRAME_HEIGHT, m_resolution[1]);
 
-        if (nbTries == 0) {
-            qDebug() << "CAMERA - ERROR: Impossible to connect to camera";
-            return;
+            resolutionisOk = frame.size().height != m_resolution[1] || frame.size().width != m_resolution[0];
+
+            (*m_cap) >> frame;
+            qDebug() << "CAMERA - Check to connect to camera device" << deviceId << ": Resolution:" << frame.size().width << "x" << frame.size().height << "->" << resolutionisOk;
         }
 
-    } while(!m_cap->isOpened());
+    } while(m_cap->isOpened() && !resolutionisOk);
 
-    // Set resolution
-    m_cap->set(cv::CAP_PROP_FRAME_WIDTH, m_resolution[0]);
-    m_cap->set(cv::CAP_PROP_FRAME_HEIGHT, m_resolution[1]);
-
-    emit endOfLoading();
+    if (!m_cap->isOpened()) {
+        qDebug() << "CAMERA - ERROR: No camera device match target resolution";
+        return;
+    }
+    else {
+        emit endOfLoading();
+    }
 }
 
 /**

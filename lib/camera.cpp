@@ -85,6 +85,14 @@ void Camera::connection()
     m_cap->set(cv::CAP_PROP_FRAME_WIDTH, m_resolution[0]);
     m_cap->set(cv::CAP_PROP_FRAME_HEIGHT, m_resolution[1]);
 
+    cv::Mat frame;
+    (*m_cap) >> frame;
+
+    if(frame.size().height != m_resolution[1] || frame.size().width ==  m_resolution[0]) {
+        qDebug() << "CAMERA - ERROR: The resolution does not match the target - Check the camera device id";
+        return;
+    }
+
     emit endOfLoading();
 }
 

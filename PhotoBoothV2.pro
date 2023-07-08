@@ -49,7 +49,8 @@ DEPENDPATH += $$PWD/lib/ftd2xx
 DISTFILES += \
     lib/getCpuTemp.py \
     readme.MD \
-    settings.ini
+    settingsDev.ini \
+    settingsProd.ini
 
 win32-g++ {
     ## Opencv lib

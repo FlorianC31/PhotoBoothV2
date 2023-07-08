@@ -83,6 +83,8 @@ private:
     uint m_cameraDevice;
     uint m_resolutionMode;
     double m_triggerPeriod;
+    int m_triggerTime;
+    int m_focusTime;
     QPixmap* m_lastPhoto;
     QString m_lastPhoto2Print;
 
@@ -139,7 +141,7 @@ public slots:
     void startLoading();
     void stopLoading();
     void endOfModuleLoading(PhotoBooth::Module module);
-    void loadNewPhoto(QPixmap* lastPhoto, QString lastPhoto2Print);
+    void loadNewPhoto(QPixmap* lastPhoto, QString lastPhoto2Print, bool m_lastPhotoFailed);
 
 signals:
     void initSignal(bool secondScreen);

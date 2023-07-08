@@ -83,7 +83,7 @@ PhotoBooth::PhotoBooth(QWidget *parent) :
     connect(this, &PhotoBooth::loadLastPhoto, m_photo, &Photo::loadLast);
 
     qDebug() << "PHOTOBOOTH - Loading of CamTrigger";
-    m_camTrigger = new CamTrigger(this, m_secondScreen);
+    m_camTrigger = new CamTrigger(this, m_secondScreen, m_focusTime, m_triggerTime);
     connect(m_remoteTimer, &QTimer::timeout, m_camTrigger, &CamTrigger::checkLoop);
     m_remoteTimer->start(1000 * m_triggerPeriod);
 
@@ -191,7 +191,13 @@ bool PhotoBooth::readingSettingsFile()
     m_mirror = settings.value("mirror").toBool();
     m_fps = settings.value("fps").toUInt();
     m_resolutionMode = settings.value("resolutionMode").toUInt();
+    settings.endArray();
+
+    // read camera section
+    settings.beginReadArray("triggerRemote");
     m_triggerPeriod = settings.value("period").toDouble();
+    m_focusTime = settings.value("focusTime").toUInt();
+    m_triggerTime = settings.value("triggerTime").toUInt();
     settings.endArray();
 
     // read dev section
@@ -408,10 +414,15 @@ void PhotoBooth::stopLoading()
 /**
  * @brief PhotoBooth::showPhoto show the last photo in the UI
  */
-void PhotoBooth::loadNewPhoto(QPixmap* lastPhoto, QString lastPhoto2Print)
+void PhotoBooth::loadNewPhoto(QPixmap* lastPhoto, QString lastPhoto2Print, bool lastPhotoFailed)
 {
     if (m_state == INIT){
         endOfModuleLoading(PHOTO);
+        return;
+    }
+
+    if (lastPhotoFailed) {
+        showCam();
         return;
     }
 

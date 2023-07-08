@@ -15,14 +15,15 @@ Photo::Photo(PhotoBooth* photoBooth, QString photoFolder, uint isoMax, QSize vie
     m_isoMax(isoMax),
     m_viewerSize(viewerSize),
     m_intialized(false),
-    m_rotate(rotate)
+    m_rotate(rotate),
+    m_lastPhotoFailed(false)
 {
     m_thread = new QThread();
     m_thread->start();
     this->moveToThread(m_thread);
 
     connect(this, &Photo::sendNewPhoto, m_photoBooth, [this]() {
-        m_photoBooth->loadNewPhoto(&m_lastPhoto, m_pathToRecentFile);
+        m_photoBooth->loadNewPhoto(&m_lastPhoto, m_pathToRecentFile, m_lastPhotoFailed);
     });
 
     m_folder = QDir(photoFolder);
@@ -50,11 +51,15 @@ void Photo::loadLast()
 
         if (nbTries == 0) {
             qDebug() << "PHOTO - ERROR: no new photo has been detected";
+            m_lastPhotoFailed = true;
+            emit sendNewPhoto();
             return;
         }
 
         m_pathToRecentFile = getLastJpg();
     } while(m_pathToRecentFile == oldPhotoPath || m_pathToRecentFile == "");
+
+    m_lastPhotoFailed = false;
 
     // Get the last photo
     QPixmap newPhoto(m_pathToRecentFile);

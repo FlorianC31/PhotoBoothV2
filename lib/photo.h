@@ -34,6 +34,7 @@ private:
     QPixmap m_lastPhoto;
     bool m_intialized;
     bool m_rotate;
+    bool m_lastPhotoFailed;
 
 public slots:
     void loadLast();

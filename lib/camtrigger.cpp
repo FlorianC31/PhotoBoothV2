@@ -15,16 +15,15 @@
 
 #define MOVE_DISTANCE 2000 // px
 
-#define FOCUS_TIME 200
-#define TRIGGER_TIME 800
 
-
-CamTrigger::CamTrigger(PhotoBooth* photoBooth, bool secondScreen) :
+CamTrigger::CamTrigger(PhotoBooth* photoBooth, bool secondScreen, int focusTime, int triggerTime) :
     m_photoBooth(photoBooth),
     m_state(INIT),
     m_title("Remote"),
     m_initXPos(500),
-    m_secondScreen(secondScreen)
+    m_secondScreen(secondScreen),
+    m_focusTime(focusTime),
+    m_triggerTime(triggerTime)
 {
     // Creation and initialisation of trigger thread
     m_thread = new QThread();
@@ -54,7 +53,7 @@ void CamTrigger::focus()
     }
     pressKey(G);
 
-    QThread::msleep(FOCUS_TIME);
+    QThread::msleep(m_focusTime);
 
     releaseKey(G);
     if (!m_secondScreen) {
@@ -73,7 +72,12 @@ void CamTrigger::trigger()
     }
     pressKey(AND);
 
-    QThread::msleep(TRIGGER_TIME);
+    if (m_state == RUNNING) {
+        QThread::msleep(m_triggerTime);
+    }
+    else{
+        QThread::msleep(2000);
+    }
 
     releaseKey(AND);
     if (!m_secondScreen) {

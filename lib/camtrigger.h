@@ -20,7 +20,7 @@ class CamTrigger : public QObject
     Q_OBJECT
 
 public:
-    CamTrigger(PhotoBooth* photoBooth, bool secondScreen);
+    CamTrigger(PhotoBooth* photoBooth, bool secondScreen, int focusTime, int triggerTime);
     ~CamTrigger();
     inline bool isLoaded() {return m_state == State::RUNNING;};
 
@@ -49,6 +49,8 @@ private:
     HWND m_handle;
     int m_initXPos;
     bool m_secondScreen;
+    int m_focusTime;
+    int m_triggerTime;
     int m_tempo;
 
     bool isPreRemote() {return checkSize(930, 376);};

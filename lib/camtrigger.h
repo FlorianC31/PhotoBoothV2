@@ -82,6 +82,8 @@ private:
     Point getPos();
     bool checkSize(int w, int h);
 
+    static std::wstring stringToWString(const std::string& str);
+
 public slots:
     void focus();
     void trigger();

@@ -1,8 +1,7 @@
 #include "camtrigger.h"
 #include <cstdlib>
 #include <qDebug>
-#include <codecvt>
-#include <locale>
+
 
 #define MAX_OPEN_TEMPO 10
 #define MAX_LOAD_TEMPO 10
@@ -340,6 +339,15 @@ void CamTrigger::loadCamera()
     m_state = CAMERA_LOADING;
 }
 
+std::wstring CamTrigger::stringToWString(const std::string& str) {
+    if (str.empty()) return std::wstring();
+
+    int size_needed = MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), NULL, 0);
+    std::wstring wstrTo(size_needed, 0);
+    MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), &wstrTo[0], size_needed);
+    return wstrTo;
+}
+
 
 void CamTrigger::openPreRemote()
 {
@@ -352,8 +360,8 @@ void CamTrigger::openPreRemote()
     }
 
     std::string remotePath = "\"C:\\Program Files\\Sony\\Imaging Edge\\Remote.exe\"";
-    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-    std::wstring wfilePath = converter.from_bytes(remotePath);
+
+    std::wstring wfilePath = stringToWString(remotePath);
     ShellExecute(NULL, L"open", wfilePath.c_str(), NULL, NULL, SW_SHOWNORMAL);
     system(remotePath.c_str());
 

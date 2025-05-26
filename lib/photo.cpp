@@ -103,7 +103,8 @@ QString Photo::getLastJpg()
 bool Photo::checkIso()
 {
     // Read the JPEG file into a buffer
-    FILE *fp = std::fopen(m_pathToRecentFile.toStdString().c_str(), "rb");
+    FILE *fp = nullptr;
+    fopen_s(&fp, m_pathToRecentFile.toStdString().c_str(), "rb");
     if (!fp) {
       qDebug() << "PHOTO - ERROR: CheckISO - Can't open file.";
       return false;
@@ -125,7 +126,7 @@ bool Photo::checkIso()
     delete[] buf;
     if (code) {
       qDebug() << "PHOTO - ERROR: CheckISO - Error parsing EXIF: code" << code;
-      return -3;
+      return false;
     }
 
     return result.ISOSpeedRatings > m_isoMax;

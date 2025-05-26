@@ -52,22 +52,42 @@ DISTFILES += \
     settingsDev.ini \
     settingsProd.ini
 
+
+## Opencv lib
+
+INCLUDEPATH += $$PWD/lib/opencv/include
+DEPENDPATH += $$PWD/lib/opencv/include
+
+
+
 win32-g++ {
-    ## Opencv lib
     LIBS += -L$$PWD/lib/opencv/x64/mingw/lib/ -llibopencv_core470.dll
     LIBS += -L$$PWD/lib/opencv/x64/mingw/lib/ -llibopencv_imgcodecs470.dll
     LIBS += -L$$PWD/lib/opencv/x64/mingw/lib/ -llibopencv_imgproc470.dll
     LIBS += -L$$PWD/lib/opencv/x64/mingw/lib/ -llibopencv_videoio470.dll
-
-    INCLUDEPATH += $$PWD/lib/opencv/include
-    DEPENDPATH += $$PWD/lib/opencv/include
 }
 
 win32-msvc* {
+    OPENCV_PATH = $$PWD/lib/opencv/x64/msvc2019
+    LIBS += -L$$OPENCV_PATH/lib/
 
-    win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../../../../../OpenCV/opencv/build/x64/vc16/lib/ -lopencv_world470
-    else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../../../../../OpenCV/opencv/build/x64/vc16/lib/ -lopencv_world470d
+    # Désactiver les warnings MSVC
+    QMAKE_CXXFLAGS += /wd4828
 
-    INCLUDEPATH += $$PWD/../../../../../../OpenCV/opencv/sources/include
-    DEPENDPATH += $$PWD/../../../../../../OpenCV/opencv/build/x64/vc16
+    # Configuration selon le mode de compilation
+    CONFIG(debug, debug|release) {
+        # Versions Debug avec suffixe 'd'
+        LIBS += -lopencv_core470d \
+                -lopencv_imgcodecs470d \
+                -lopencv_imgproc470d \
+                -lopencv_videoio470d
+    } else {
+        # Versions Release
+        LIBS += -lopencv_core470 \
+                -lopencv_imgcodecs470 \
+                -lopencv_imgproc470 \
+                -lopencv_videoio470
+    }
 }
+
+LIBS += -luser32 -lkernel32
